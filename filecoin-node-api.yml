@@ -1,0 +1,30 @@
+openapi: 3.0.2
+info:
+  title: Filecoin JSON REST Node API 
+  description: Filecoin JSON REST Node API Description
+  version: 0.1.0
+servers:
+- url: http://127.0.0.1:3453/api/node/v0
+paths:
+  /node:
+    get:
+      summary: Get information about the current Filecoin Node
+      description: Get information about the current Filecoin Node
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+components:
+  schemas:
+    Node:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [node]
+        address: 
+          type: string
+        
