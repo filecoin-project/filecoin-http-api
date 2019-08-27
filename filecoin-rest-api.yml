@@ -1,26 +1,84 @@
 openapi: 3.0.2
+tags:
+  - name: Actors
+  - name: Node
+  - name: blocks
+  - name: messages
+  - name: tipsets
+    description: Operations on tipsets
+x-tagGroups:
+  - name: Chain Resources
+    tags:
+      - tipsets
+      - blocks
+      - messages
+  - name: Actors
+    tags:
+      - actors
+  - name: Control
+    tags:
+      - Node
 info:
-  title: Filecoin JSON REST Chain API
-  description: Filecoin JSON REST Chain API Description
+  title: Filecoin JSON REST API
+  description: Filecoin JSON REST API Description
   version: 0.1.0
+  contact: 
+    name: Filecoin JSON REST API SPEC
+    email: erik.ingenito@protocol.ai
 servers:
 - url: http://127.0.0.1:3453/api/chain/v0
 paths:
-  /version:
+  /actors/actors:
     get:
-      summary: Return version info
-      description: Fetch version information for the current node
+      operationId: listActors
+      summary: List actors
+      description: List actors currently known to this node in ID order
+      tags:
+        - actors
+      parameters:
+      - name: nextPageToken
+        in: query
+        description: Next page token
+        required: false
+        schema:
+          type: string
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Version'
-  /tipsets:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Actor'
+  /actors/{actorId}:
     get:
+      operationId: getActorById
+      summary: Find actor by ID
+      description: Find a single actor record by ID
+      tags:
+        - actors
+      parameters: 
+      - name: actorId
+        in: path
+        description: ID of the Actor to fetch
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actor'
+  /chain/tipsets:
+    get:
+      operationId: listTipsets
       summary: List tipsets
       description: List tipsets currently known to this node in reverse height order
+      tags:
+        - tipsets
       parameters:
       - name: nextPageToken
         in: query
@@ -37,10 +95,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Tipset'
-  /tipsets/{tipsetId}:
+  /chain/tipsets/{tipsetId}:
     get:
-      summary: Find tipset by ID
+      operationId: getTipsetById
+      summary: Fetch a tipset by ID
       description: Find a single tipset record by ID
+      tags:
+        - tipsets
       parameters: 
       - name: tipsetId
         in: path
@@ -55,10 +116,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Tipset'
-  /block/{blockId}:
+  /chain/block/{blockId}:
     get:
+      operationId: getBlockById
       summary: Find block by ID
       description: Find a single block record by ID
+      tags:
+        - blocks
       parameters: 
       - name: blockId
         in: path
@@ -73,10 +137,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Message'
-  /messages:
+  /chain/messages:
     post:
+      operationId: createMessage
       summary: Send a message
       description: This method sends a new message to an actor recipient.
+      tags: 
+        - messages
       requestBody:
         content:
           application/json:
@@ -89,11 +156,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Message'
-
-  /messages/{messageId}:
+  /chain/messages/{messageId}:
     get:
+      operationId: getMessageById
       summary: Find message by ID
       description: Find a single message record by ID
+      tags: 
+        - nessages
       parameters: 
       - name: messageId
         in: path
@@ -108,10 +177,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Message'
-  /executed-messages/{executedMessageId}:
+  /chain/executed-messages/{executedMessageId}:
     get:
+      operationId: getExecutedMessageById
       summary: Find executed message by ID
       description: An executed message is one that has been included in a valid block in the chain. It includes return value and status information. Find a single executed message record by ID
+      tags:
+        - messages
       parameters: 
       - name: executedMessageId
         in: path
@@ -126,8 +198,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExecutedMessage'
+  /control/node:
+    get:
+      operationId: getNode
+      summary: Get information about the current Filecoin Node
+      description: Get information about the current Filecoin Node
+      tags:
+        - Node
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
 components:
-  schemas:            
+  schemas:
+    Actor:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [actor]
+        id: 
+          type: string
+        role:
+          type: string
+          enum: [miner,user,storageMarket,paymentBroker]
+        nonce:
+          type: number
+        balance:
+          type: number
+        stateRoot:
+          type: string
+        state: 
+          type: object
+          description: Role specific properties         
     Block:
       type: object
       properties:
@@ -229,6 +335,37 @@ components:
         signature: 
           type: string
           readOnly: true
+    Node:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [node]
+        id: 
+          type: string
+          example: QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
+        addresses:
+          type: array
+          items:
+            type: string
+            example: /ip4/127.0.0.1/tcp/6000/ipfs/QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
+        version:
+          type: string
+          example: "1.0.2"
+        commit:
+          type: string
+          example: "93540266a2a9972e91947a538ce70dc9c4e8077e"
+        protocol:
+          type: object
+          properties:
+            autoSealInterval: 
+              type: number
+              description: Auto-Seal Interval in Seconds
+            sectorSizes:
+              type: array
+              description: Supoorted sector sizes in bytes
+              items:
+                type: number  
     Tipset:
       type: object
       properties:
@@ -246,16 +383,3 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BlockHeader'
-    Version:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [version]
-          readOnly: true
-        version:
-          type: string
-          example: "1.0.2"
-        commit:
-          type: string
-          example: "93540266a2a9972e91947a538ce70dc9c4e8077e"
