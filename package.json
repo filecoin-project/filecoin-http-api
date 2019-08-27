@@ -1,0 +1,9 @@
+{
+  "name": "filecoin-rest-api",
+  "description": "Filecoin JSON REST API OpenAPI Specification",
+  "version": "0.1.0",
+  "dependencies": {
+    "speccy": "^0.11.0"
+  },
+  "devDependencies": {}
+}
