@@ -214,6 +214,53 @@ paths:
                 $ref: '#/components/schemas/Node'
 components:
   schemas:
+    Sector:
+      type: object
+      properties:
+        id:
+          type: string
+        commR:
+          type: string
+    MinerState:
+      type: object
+      properties: 
+        kind: 
+          type: string
+          enum: [minerState]
+        dePledgedCollateral:
+          description: Collateral that is waiting to be withdrawn
+          type: number
+        dePledgeTime: 
+          description: Time at which the depledged collateral may be withdrawn
+          type: number
+        sectors: 
+          type: array
+          items: 
+            $ref: '#/components/schemas/Sector'
+        provingSet:
+          type: array
+          items: 
+            $ref: '#/components/schemas/Sector'
+        currentFaultSet:
+          type: string
+        nextFaultSet:
+          type: string
+        nextDoneSet:
+          type: string
+        arbitratedDeals:
+          type: string
+        power:
+          type: number
+        slashedSet:
+          type: array
+          items: 
+            $ref: '#/components/schemas/Sector'
+        slashedAt:
+          type: number
+        ownedStorageCollateral:
+          type: number
+        provingPeriodEnd:
+          type: number
     Actor:
       type: object
       properties:
@@ -224,7 +271,7 @@ components:
           type: string
         role:
           type: string
-          enum: [miner,user,storageMarket,paymentBroker]
+          enum: [miner,account,storageMarket,paymentBroker]
         nonce:
           type: number
         balance:
@@ -232,8 +279,8 @@ components:
         stateRoot:
           type: string
         state: 
-          type: object
-          description: Role specific properties         
+            oneOf: 
+              - $ref: '#/components/schemas/MinerState'
     Block:
       type: object
       properties:
