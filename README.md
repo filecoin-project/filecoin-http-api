@@ -1,4 +1,4 @@
-# node-http-api
+# WIP node-http-api
 OpenAPI specification for the Filecoin HTTP REST API. 
 
 This is the specification for the HTTP REST API (to be) implemented by Filecoin nodes. Some details of its design and rationale can be found in this [Design Document](https://docs.google.com/document/d/1ANnTHOU-8612ayvvS7Ru4B1L4voojLE0R0TQ8zF1x5s/edit#heading=h.8v8p3fl8e3gj). 
