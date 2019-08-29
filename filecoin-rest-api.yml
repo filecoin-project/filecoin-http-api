@@ -220,19 +220,49 @@ components:
         id:
           type: string
         commR:
-          type: string
-    MinerState:
+          type: string  
+    EmptyActorState:
+      type: object 
+      description: There is no additional state exposed by this actor
+    AccountActorState:
+      $ref: '#/components/schemas/EmptyActorState'
+    InitActorState:
+      type: object
+      properties:
+        nextId: 
+          type: number
+          description: The next numerical ID to allocate to a newly instantiated Actor
+    StorageMarketActorState:
+      type: object
+      properties:
+        totalStorage: 
+          type: number
+          description: Filecoin's total committed storage as of the current block.
+    PaymentChannelActorState:
+      type: object
+    PaymentBrokerActorState:
+      $ref: '#/components/schemas/EmptyActorState'
+    MinerActorState:
       type: object
       properties: 
-        kind: 
+        owner:
           type: string
-          enum: [minerState]
+          description: The address of the account that owns this miner. Income and returned are paid to this address. This address is also allowed to change the worker address for the miner.
+        worker:
+          type: string
+          description: The address of the worker account for this miner. This will be the key that is used to sign blocks created by this miner, and sign messages sent on behalf of this miner to commit sectors, submit PoSts, and other day to day miner activities.
+        peerId: 
+          type: string
+          description: PeerID references the libp2p identity that the miner is operating.
+        sectorSize:
+          type: number
+          description: SectorSize is the amount of space in each sector committed to the network by this miner.
         dePledgedCollateral:
+          type: number
           description: Collateral that is waiting to be withdrawn
-          type: number
         dePledgeTime: 
-          description: Time at which the depledged collateral may be withdrawn
           type: number
+          description: Time at which the depledged collateral may be withdrawn
         sectors: 
           type: array
           items: 
@@ -271,16 +301,22 @@ components:
           type: string
         role:
           type: string
-          enum: [miner,account,storageMarket,paymentBroker]
+          enum: [init,account,miner,storageMarket,paymentBroker]
         nonce:
           type: number
+          description: Nonce is the nonce expected on the next message from this actor. Messages are processed in strict, contiguous nonce order. 
         balance:
           type: number
+          description: Balance is the amount of FIL in the actor's account.
         stateRoot:
           type: string
-        state: 
+          description: The CID of the root of the actor's state tree.
+        info: 
             oneOf: 
-              - $ref: '#/components/schemas/MinerState'
+        #       - $ref: '#/components/schemas/AccountActorState'
+        #       - $ref: '#/components/schemas/InitActorState'
+              - $ref: '#/components/schemas/MinerActorState'
+        #       - $ref: '#/components/schemas/StorageMarketActorState'
     Block:
       type: object
       properties:
