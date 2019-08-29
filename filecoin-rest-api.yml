@@ -18,6 +18,7 @@ x-tagGroups:
   - name: Control
     tags:
       - Node
+      - Address
 info:
   title: Filecoin JSON REST API
   description: Filecoin JSON REST API Description
@@ -198,6 +199,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExecutedMessage'
+  # This is a terrible place for this - maybe address should be reserved for wallet operations
+  /control/address/{minerId}:
+    get:
+      operationId: getAddressForMiner
+      summary: Fetch peer address for Miner
+      description: Fetches the peer address(es) for the miner with the specified address.
+      tags:
+        - Address
+      parameters: 
+      - name: minerId
+        in: path
+        description: The Filecoin Address of the miner to fetch the Peer (libp2p network) addresses for.
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeerAddresses'
   /control/node:
     get:
       operationId: getNode
@@ -238,8 +261,6 @@ components:
         totalStorage: 
           type: number
           description: Filecoin's total committed storage as of the current block.
-    PaymentChannelActorState:
-      type: object
     PaymentBrokerActorState:
       $ref: '#/components/schemas/EmptyActorState'
     MinerActorState:
@@ -313,10 +334,11 @@ components:
           description: The CID of the root of the actor's state tree.
         info: 
             oneOf: 
-        #       - $ref: '#/components/schemas/AccountActorState'
-        #       - $ref: '#/components/schemas/InitActorState'
+              - $ref: '#/components/schemas/AccountActorState'
+              - $ref: '#/components/schemas/InitActorState'
               - $ref: '#/components/schemas/MinerActorState'
-        #       - $ref: '#/components/schemas/StorageMarketActorState'
+              - $ref: '#/components/schemas/PaymentBrokerActorState'
+              - $ref: '#/components/schemas/StorageMarketActorState'
     Block:
       type: object
       properties:
@@ -418,6 +440,12 @@ components:
         signature: 
           type: string
           readOnly: true
+    PeerAddresses: 
+      type: array
+      description: List of peer (network) addresses
+      items:
+        type: string
+        example: /ip4/127.0.0.1/tcp/6000/ipfs/QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
     Node:
       type: object
       properties:
@@ -428,10 +456,7 @@ components:
           type: string
           example: QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
         addresses:
-          type: array
-          items:
-            type: string
-            example: /ip4/127.0.0.1/tcp/6000/ipfs/QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
+          $ref: '#/components/schemas/PeerAddresses'
         version:
           type: string
           example: "1.0.2"
@@ -448,7 +473,41 @@ components:
               type: array
               description: Supoorted sector sizes in bytes
               items:
-                type: number  
+                type: number 
+        bitswapStats:
+          type: object
+          properties:
+            blocksReceived: 
+              type: number
+            blocksSent: 
+              type: number
+            dataReceived: 
+              type: number
+            dataSent: 
+              type: number
+            dupBlksReceived:
+              type: number
+            dupDataReceived: 
+              type: number
+            messagesReceived: 
+              type: number
+            ProvideBufLen: 
+              type: number
+            peers:
+              type: array
+              description: Filecoin Addresses of currently connected peers
+              items:
+                type: string
+                example: 'QmUA8TXLxsfuifpyHPxGfwWgXSCr6omqb6bdQy2KwWQCBz'
+            wantlist:
+              type: array
+              description: CIDs of currently desired content blocks
+              items:
+                type: string
+                example: 'QmQXJPWYEnt9GoYu5SXkrKMWovCX78YBjFzRSJF63Zobnj'
+        config:
+          type: object
+          description: Full JSON representation of the node's current configuration
     Tipset:
       type: object
       properties:
@@ -459,7 +518,7 @@ components:
         id:
           type: string
           readOnly: true
-          example: "zDPWYqFCyaQ9QJHr1qWZ19rFg3YRkcuXREkvpiHRJZhGN5T8SnyJ"
+          example: 'zDPWYqFCyaQ9QJHr1qWZ19rFg3YRkcuXREkvpiHRJZhGN5T8SnyJ'
         height:
           type: number
         blocks:
