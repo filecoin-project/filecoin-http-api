@@ -19,6 +19,7 @@ x-tagGroups:
     tags:
       - Node
       - Address
+      - Pieces
 info:
   title: Filecoin JSON REST API
   description: Filecoin JSON REST API Description
@@ -199,28 +200,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExecutedMessage'
-  # This is a terrible place for this - maybe address should be reserved for wallet operations
-  /control/address/{minerId}:
-    get:
-      operationId: getAddressForMiner
-      summary: Fetch peer address for Miner
-      description: Fetches the peer address(es) for the miner with the specified address.
-      tags:
-        - Address
-      parameters: 
-      - name: minerId
-        in: path
-        description: The Filecoin Address of the miner to fetch the Peer (libp2p network) addresses for.
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PeerAddresses'
   /control/node:
     get:
       operationId: getNode
@@ -235,8 +214,58 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Node'
+  /control/pieces:
+    post:
+      operationId: createPiece
+      summary: Add a piece to local temporary storage
+      description: This method imports data into the local node's temporary storage so that it can be transferred to a storage miner.  
+      tags: 
+        - Piece
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PieceMetadata'
+  /control/pieces/{pieceId}:
+    get:
+      operationId: getPieceById
+      summary: Fetch piece data 
+      description: Fetch piece data from the local node's temporary storage.
+      tags:
+        - Node
+      parameters: 
+      - name: pieceId
+        in: path
+        description: ID of the piece previously returned by corresponding createPiece POST method. 
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: If the request succeeds, the server returns the original data used to create the piece.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                description: The raw bytes of the originally imported data. 
 components:
   schemas:
+    PieceMetadata: 
+      type: object
+      properties:
+        id: 
+          type: string
+          example: QmQXJPWYEnt9GoYu5SXkrKMWovCX78YBjFzRSJF63Zobnj
+          readOnly: true
     Sector:
       type: object
       properties:
