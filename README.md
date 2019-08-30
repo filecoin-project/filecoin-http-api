@@ -18,3 +18,6 @@ To view the specification in HTML documentation form ([ReDoc](https://github.com
 $ npm run serve
 ```
 And view the resulting documentation at http://localhost:5000.
+
+## License
+Dual MIT and Apache 2
