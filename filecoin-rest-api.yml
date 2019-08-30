@@ -14,12 +14,15 @@ x-tagGroups:
       - messages
   - name: Actors
     tags:
-      - actors
+      - Actors
   - name: Control
     tags:
       - Node
       - Address
       - Pieces
+  - name: Storage Market
+    tags:
+      - Asks
 info:
   title: Filecoin JSON REST API
   description: Filecoin JSON REST API Description
@@ -30,13 +33,18 @@ info:
 servers:
 - url: http://127.0.0.1:3453/api/chain/v0
 paths:
+  # /market/deals
+  # /market/deals/{dealCid}
+  # /market/deals/{dealCid}
+  # /channels/
+  # PaymentChannelActorState
   /actors/actors:
     get:
       operationId: listActors
       summary: List actors
       description: List actors currently known to this node in ID order
       tags:
-        - actors
+        - Actors
       parameters:
       - name: nextPageToken
         in: query
@@ -59,7 +67,7 @@ paths:
       summary: Find actor by ID
       description: Find a single actor record by ID
       tags:
-        - actors
+        - Actors
       parameters: 
       - name: actorId
         in: path
@@ -220,7 +228,7 @@ paths:
       summary: Add a piece to local temporary storage
       description: This method imports data into the local node's temporary storage so that it can be transferred to a storage miner.  
       tags: 
-        - Piece
+        - Pieces
       requestBody:
         content:
           application/octet-stream:
@@ -240,7 +248,7 @@ paths:
       summary: Fetch piece data 
       description: Fetch piece data from the local node's temporary storage.
       tags:
-        - Node
+        - Pieces
       parameters: 
       - name: pieceId
         in: path
@@ -257,8 +265,108 @@ paths:
                 type: string
                 format: binary
                 description: The raw bytes of the originally imported data. 
+  /market/asks:
+    get:
+      operationId: listAsks
+      summary: Lists all Asks in the market
+      description: This endpoint returns all Asks known to the current node ordered lexically by the Ask ID
+      tags:
+        - Asks
+      parameters:
+      - name: minerId
+        in: query
+        description: Filter returned asks by minerId. Only Asks from this miner will be returned.
+        required: false
+        example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
+        schema:
+          type: string
+      - name: active
+        in: query
+        description: Filter returned asks to include only those that are still active, meaning the current node's tipset height doesn't exceed that of the Ask's specified expiration.
+        required: false
+        example: true
+        schema:
+          type: boolean
+      - name: nextPageToken
+        in: query
+        description: Next page token
+        required: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ask'
+
+    post:
+      operationId: createAsk
+      summary: Order this mining node to publish a new Ask on the network
+      description: This method creates a new storage market ask and publishes it for storage buyers to find and act on.
+      tags: 
+        - Asks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ask'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ask'
+  /market/asks/{askId}:
+    get:
+      operationId: getAskById
+      summary: Fetch Ask data 
+      description: Fetch data about an Ask by the Ask ID.
+      tags:
+        - Asks
+      parameters: 
+      - name: askId
+        in: path
+        description: ID of the Ask to fetch. 
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: If the request succeeds, the server returns the requested Ask.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ask'
 components:
   schemas:
+    Ask:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+          description: The ID of this Ask
+        kind:
+          type: string
+          enum: [ask]
+        minerId:
+          type: string
+          readOnly: true
+          description: The ID of the miner that published this Ask
+          example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
+        price:
+          type: number
+          description: The price in FIL per byte per blocktime
+          example: 0.00000000001
+        expiry:
+          type: number
+          description: The block height at which this ask expires
+          example: 392265
     PieceMetadata: 
       type: object
       properties:
