@@ -23,6 +23,7 @@ x-tagGroups:
   - name: Storage Market
     tags:
       - Asks
+      - Deals
 info:
   title: Filecoin JSON REST API
   description: Filecoin JSON REST API Description
@@ -33,11 +34,6 @@ info:
 servers:
 - url: http://127.0.0.1:3453/api/chain/v0
 paths:
-  # /market/deals
-  # /market/deals/{dealCid}
-  # /market/deals/{dealCid}
-  # /channels/
-  # PaymentChannelActorState
   /actors/actors:
     get:
       operationId: listActors
@@ -126,7 +122,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Tipset'
-  /chain/block/{blockId}:
+  /chain/blocks/{blockId}:
     get:
       operationId: getBlockById
       summary: Find block by ID
@@ -302,7 +298,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Ask'
-
     post:
       operationId: createAsk
       summary: Order this mining node to publish a new Ask on the network
@@ -342,11 +337,118 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Ask'
+  /market/deals:
+    get:
+      operationId: getDeals
+      summary: Fetch Deal information known to this node
+      description: This endpoint returns a list of all deals known to the current node.  
+      tags:
+        - Deals
+      parameters:
+      - name: minerId
+        in: query
+        description: Filter returned Deals by minerId. Only Deals made with (or proposed to) the specified miner will be returned.
+        required: false
+        example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
+        schema:
+          type: string
+      - name: clientId
+        in: query
+        description: Filter returned Deals by clientId. Only Deals initiated by the specified client will be returned.
+        required: false
+        example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
+        schema:
+          type: string
+      - name: pieceId
+        in: query
+        description: Filter returned Deals by pieceId. Only Deals made to store the specified pieceId will be returned.
+        required: false
+        example: QmYRHQCRVSznLwaR8kXtVH4KSZU5fqFPPSkxv9xsJV2QCY
+        schema:
+          type: string
+      - name: nextPageToken
+        in: query
+        description: Next page token
+        required: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Deal'
+  # post:
+  # /market/deals/{dealCid}
+  # /channels/
+  # PaymentChannelActorState
+  # create channel: POST /channels
+  # extend channel: PATCH /channels/{channelId} {}
+  # cancel channel (prematurely): POST /channels/{channelId}/cancel
+  # close channel (with final payment?): POST /channels/{channelId}/close
+  # reclaim funds (from expired channel): POST /channels/{channelId}/reclaim
+  # redeem voucher: POST /channels/{channelId}/payments
+  # create voucher: POST /channels/{channelId}/vouchers
 components:
   schemas:
-    Ask:
+    Deal:
       type: object
       properties:
+        id:
+          type: string
+          readOnly: true
+          description: The ID of this Deal
+        kind:
+          type: string
+          enum: [deal]
+        minerActorId:
+          type: string
+          readOnly: true
+          description: The ID of the miner that published this Ask
+          example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
+        clientActorId:
+          type: string
+          readOnly: true
+          description: The ID of the client initiating the storage deal
+          example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
+        pieceId:
+          type: string
+          description: The ID of the picee being stored
+          example: QmYRHQCRVSznLwaR8kXtVH4KSZU5fqFPPSkxv9xsJV2QCY
+        size:
+          type: number
+          description: Size of the piece being stored in bytes
+          example: 67003
+        totalPrice:
+          type: number
+          description: The total price in FIL that will be paid for the entire storage operation
+          example: 0.19296864
+        duration:
+          type: number
+          description: The duration of the storage deal in blocks
+          example: 288000
+        paymentInfo: 
+          type: object
+          properties: 
+            paymentChannelActorId: 
+              type: string
+              description: The address of the payment channel actor that will be used to facilitate payments
+              example: 3
+            payerClientActorId: 
+              type: string
+              description: The address of the owner of the payment channel
+            channelId:
+              type: string
+              description: The ID of the payment channel the client will use to pay the miner. It must already exist and have sufficient funds locked up in order to create a storage deal.
+            channelMessageId:
+              type: string
+              description:  The ID of the message used to create the channel (so the miner can wait for it).
+    Ask:
+      type: object
+      properties: 
         id:
           type: string
           readOnly: true
