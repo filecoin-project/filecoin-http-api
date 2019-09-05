@@ -15,6 +15,7 @@ x-tagGroups:
   - name: Actors
     tags:
       - Actors
+      - Channels
   - name: Control
     tags:
       - Node
@@ -57,7 +58,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Actor'
-  /actors/{actorId}:
+  /actors/actors/{actorId}: # Ugh, clearly wrong
     get:
       operationId: getActorById
       summary: Find actor by ID
@@ -381,11 +382,120 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Deal'
-  # post:
-  # /market/deals/{dealCid}
-  # /channels/
-  # PaymentChannelActorState
-  # create channel: POST /channels
+    post:
+      operationId: createDeal
+      summary: Initiate a storage deal
+      description: This endpoint initiates a storage deal with a storage miner. It will create an appropriate payment Channel and vouchers, and pass the deal to the target storage miner to await acceptance or rejection.
+      tags:
+        - Deals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Deal'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Deal'
+  /actors/channels:
+    get:
+      operationId: listChannels
+      summary: List Channels
+      description: List all payment channels known to this node
+      tags:
+        - Channels
+      parameters:
+      - name: nextPageToken
+        in: query
+        description: Next page token
+        required: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+    post: 
+      operationId: createChannel
+      summary: Create new payment Channel
+      description: This endpoint creates a new payment Channel with the specified characteristics
+      tags:
+        - Channels
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Channel'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+  /actors/channels/{channelId}:
+    get:
+      operationId: getChannelById
+      summary: Find channel by ID
+      description: Find a payment Channel by ID and return it
+      tags:
+        - Channels
+      parameters: 
+      - name: channelId
+        in: path
+        description: ID of the Channel to fetch
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Channel'
+    put:
+      operationId: extendChannelById
+      summary: Extends the duration of an existing payment channel
+      description: This endpoint creates a new payment Channel with the specified attributes. 
+      tags:
+        - Channels
+      parameters: 
+      - name: channelId
+        in: path
+        description: ID of the Channel to fetch
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          applications/json:
+            schema:
+              type: object
+              properties:
+                agreedEol:
+                  type: number
+                  description: The new chain (increased) height at which this channel will expire.
+                  example: 2120399
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Channel'
   # extend channel: PATCH /channels/{channelId} {}
   # cancel channel (prematurely): POST /channels/{channelId}/cancel
   # close channel (with final payment?): POST /channels/{channelId}/close
@@ -394,36 +504,85 @@ paths:
   # create voucher: POST /channels/{channelId}/vouchers
 components:
   schemas:
+    Channel:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of this Channel
+          readOnly: true
+        kind:
+          type: string
+          readOnly: true
+          enum: [channel]
+        targetActorId:
+          type: string
+          description: The address of the account to which funds will be transferred by this channel upon successful redemption of vouchers
+          example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
+        amount:
+          type: number
+          description: The total amount of FIL that is in this channel and payable to the target
+          example: 0.19296864
+        amountRedeemed:
+          type: number
+          readOnly: true
+          description: The total amount of FIL that has already been transfered to the target. This value cannot ever exceed amount. 
+          example: 0
+        agreedEol:
+          type: number
+          description: The original chain height at which this channel will expire. Specified upon creation and optionally extended by the creator of the channel.
+          example: 2120399
+        actualEol:
+          type: number
+          readOnly: true
+          description: The actual expiration for the payment channel which can differ from agreedEol when the payment channel is in dispute 
+        condition: 
+          type: object
+          readOnly: true
+          description: The condition specified in the most recent payment voucher for which a redemption attempt was made. 
+          example: TODO
+        redeemed:
+          type: boolean
+          readOnly: true
+          description: A flag indicated whether or not Redeem has been called on the payment channel yet. This is necessary because AmountRedeemed can still be zero in the event of a zero-value voucher
+          example: true
     Deal:
       type: object
       properties:
         id:
           type: string
-          readOnly: true
           description: The ID of this Deal
+          readOnly: true
         kind:
           type: string
+          readOnly: true
           enum: [deal]
         minerActorId:
           type: string
-          readOnly: true
-          description: The ID of the miner that published this Ask
+          description: The ID of the storage miner that is fulfilling this deal
           example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
         clientActorId:
           type: string
           readOnly: true
-          description: The ID of the client initiating the storage deal
+          description: The ID of the client initiating the storage deal (will typically be the owner of the current node)
           example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
         pieceId:
           type: string
           description: The ID of the picee being stored
           example: QmYRHQCRVSznLwaR8kXtVH4KSZU5fqFPPSkxv9xsJV2QCY
+        askId:
+          type: string
+          writeOnly: true
+          description: The id of the Ask from the target miner for which this deal is to be proposed
+          example: 0
         size:
           type: number
+          readOnly: true  
           description: Size of the piece being stored in bytes
           example: 67003
         totalPrice:
           type: number
+          readOnly: true
           description: The total price in FIL that will be paid for the entire storage operation
           example: 0.19296864
         duration:
@@ -432,11 +591,8 @@ components:
           example: 288000
         paymentInfo: 
           type: object
+          readOnly: true
           properties: 
-            paymentChannelActorId: 
-              type: string
-              description: The address of the payment channel actor that will be used to facilitate payments
-              example: 3
             payerClientActorId: 
               type: string
               description: The address of the owner of the payment channel
@@ -451,8 +607,8 @@ components:
       properties: 
         id:
           type: string
-          readOnly: true
           description: The ID of this Ask
+          readOnly: true
         kind:
           type: string
           enum: [ask]
@@ -556,6 +712,7 @@ components:
       properties:
         kind:
           type: string
+          readOnly: true
           enum: [actor]
         id: 
           type: string
@@ -584,6 +741,7 @@ components:
         kind:
           type: string
           enum: [block]
+          readOnly: true
         id: 
           type: string
         header: 
@@ -691,6 +849,7 @@ components:
         kind:
           type: string
           enum: [node]
+          readOnly: true
         id: 
           type: string
           example: QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
