@@ -2,26 +2,26 @@ openapi: 3.0.2
 tags:
   - name: Actors
   - name: Node
-  - name: blocks
-  - name: messages
-  - name: tipsets
+  - name: Blocks
+  - name: Messages
+  - name: Tipsets
     description: Operations on tipsets
 x-tagGroups:
   - name: Chain Resources
     tags:
-      - tipsets
-      - blocks
-      - messages
-  - name: Actors
+      - Tipsets
+      - Blocks
+      - Messages
+  - name: Actor Endpoints
     tags:
       - Actors
       - Channels
-  - name: Control
+  - name: Node Control Endpoints
     tags:
       - Node
       - Address
       - Pieces
-  - name: Storage Market
+  - name: Storage Market Endpoints
     tags:
       - Asks
       - Deals
@@ -38,8 +38,8 @@ paths:
   /actors/actors:
     get:
       operationId: listActors
-      summary: List actors
-      description: List actors currently known to this node in ID order
+      summary: List Actors
+      description: List Actors currently known to this node in ID order
       tags:
         - Actors
       parameters:
@@ -61,8 +61,8 @@ paths:
   /actors/actors/{actorId}: # Ugh, clearly wrong
     get:
       operationId: getActorById
-      summary: Find actor by ID
-      description: Find a single actor record by ID
+      summary: Find Actor by ID
+      description: Return information about the Actor with the specified ID
       tags:
         - Actors
       parameters: 
@@ -82,10 +82,10 @@ paths:
   /chain/tipsets:
     get:
       operationId: listTipsets
-      summary: List tipsets
-      description: List tipsets currently known to this node in reverse height order
+      summary: List Tipsets
+      description: List Tipsets currently known to this node in reverse height order
       tags:
-        - tipsets
+        - Tipsets
       parameters:
       - name: nextPageToken
         in: query
@@ -105,10 +105,10 @@ paths:
   /chain/tipsets/{tipsetId}:
     get:
       operationId: getTipsetById
-      summary: Fetch a tipset by ID
-      description: Find a single tipset record by ID
+      summary: Fetch a Tipset by ID
+      description: Return information about the Tipset with the specified ID
       tags:
-        - tipsets
+        - Tipsets
       parameters: 
       - name: tipsetId
         in: path
@@ -127,9 +127,9 @@ paths:
     get:
       operationId: getBlockById
       summary: Find block by ID
-      description: Find a single block record by ID
+      description: Return information about the Block with the specified ID
       tags:
-        - blocks
+        - Blocks
       parameters: 
       - name: blockId
         in: path
@@ -147,10 +147,10 @@ paths:
   /chain/messages:
     post:
       operationId: createMessage
-      summary: Send a message
-      description: This method sends a new message to an actor recipient.
+      summary: Send a Message
+      description: This method sends a new Message to an Actor recipient.
       tags: 
-        - messages
+        - Messages
       requestBody:
         content:
           application/json:
@@ -166,8 +166,8 @@ paths:
   /chain/messages/{messageId}:
     get:
       operationId: getMessageById
-      summary: Find message by ID
-      description: Find a single message record by ID
+      summary: Find Message by ID
+      description: Return information about the Message with the specified ID
       tags: 
         - nessages
       parameters: 
@@ -187,10 +187,10 @@ paths:
   /chain/executed-messages/{executedMessageId}:
     get:
       operationId: getExecutedMessageById
-      summary: Find executed message by ID
-      description: An executed message is one that has been included in a valid block in the chain. It includes return value and status information. Find a single executed message record by ID
+      summary: Find ExecutedMessage by ID
+      description: Return information about the ExecutedMessage with the specified ID. An executed Message is one that has been included in a valid block in the chain. It includes return value and status information.
       tags:
-        - messages
+        - Messages
       parameters: 
       - name: executedMessageId
         in: path
@@ -208,8 +208,8 @@ paths:
   /control/node:
     get:
       operationId: getNode
-      summary: Get information about the current Filecoin Node
-      description: Get information about the current Filecoin Node
+      summary: Return Node information
+      description: Get information about the current Filecoin Node.
       tags:
         - Node
       responses:
@@ -222,7 +222,7 @@ paths:
   /control/pieces:
     post:
       operationId: createPiece
-      summary: Add a piece to local temporary storage
+      summary: Add a Piece to local storage
       description: This method imports data into the local node's temporary storage so that it can be transferred to a storage miner.  
       tags: 
         - Pieces
@@ -445,10 +445,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Channel'
-  /actors/channels/{channelId}:
+  /actors/channels/{channelId}: # Right now it's not possible to look up Channels by ID alone, only by Payee/ID, channel ID could just be a concatenation
     get:
       operationId: getChannelById
-      summary: Find channel by ID
+      summary: Find Channel by ID
       description: Find a payment Channel by ID and return it
       tags:
         - Channels
@@ -466,10 +466,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Channel'
-    put:
+    patch:
       operationId: extendChannelById
-      summary: Extends the duration of an existing payment channel
-      description: This endpoint creates a new payment Channel with the specified attributes. 
+      summary: Extend duration of Channel
+      description: This endpoint extends the duration of an existing payment Channel, increasing the block height at which the Channel will timeout. Only the payer (creator) or the channel can successfully call this endpoint. 
       tags:
         - Channels
       parameters: 
@@ -496,14 +496,137 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Channel'
-  # extend channel: PATCH /channels/{channelId} {}
-  # cancel channel (prematurely): POST /channels/{channelId}/cancel
-  # close channel (with final payment?): POST /channels/{channelId}/close
-  # reclaim funds (from expired channel): POST /channels/{channelId}/reclaim
-  # redeem voucher: POST /channels/{channelId}/payments
-  # create voucher: POST /channels/{channelId}/vouchers
+  /actors/channels/{channelId}/close:
+    post:
+      operationId: closeChannel
+      summary: Close Channel
+      description: This endpoint closes the specified payment Channel and returns all unredeemed funds to the payee (the Channel's creator). Upon completion this Channel is effectively deleted and can never be used again. This method can only be called by target of the Channel with a valid voucher - any other invocation is an error.
+      tags:
+        - Channels
+      parameters: 
+      - name: channelId
+        in: path
+        description: ID of the Channel to fetch
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+  /actors/channels/{channelId}/cancel:
+    post:
+      operationId: cancelChannel
+      summary: Schedule Channel for cancellation
+      description: This endpoint reduces the actual eol (effective end date) of the Channel in an attempt to free up the funds in the channel for earlier reclaming. This endpoint can only successfullly be called by the Channel's payer as the cancel message needs to originate from that account. Cancel doesn't immediately close a channel but instead reduces the lifetime of the channel leaving a grace period during which the payee can undo the cancellation by submitting a valid voucher, thereby proving that the channel is still in use.
+      tags:
+        - Channels
+      parameters: 
+      - name: channelId
+        in: path
+        description: ID of the Channel to cancel
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+  /actors/channels/{channelId}/reclaim:
+    post:
+      operationId: reclaimChannel
+      summary: Reclaim unspent funds in Channel
+      description: This endpoint is used by the creator (payer) of a Channel to reclaim unspent funds when a Channel has timed out (the chain height has exceeded the eol of the Channel). It can only successfully be called by the Channel's payer on a timed out Channel.
+      tags:
+        - Channels
+      parameters: 
+      - name: channelId
+        in: path
+        description: ID of the Channel to reclaim
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+  /actors/channels/{channelId}/redeem:
+    post:
+      operationId: redeemVoucher
+      summary: Redeem Voucher
+      description: This endpoint accepts a voucher from the Channel target and redeems it. Upon checking the validity and successfully checking the voucher's condition the specified funds will be transfered from the channel to the target. 
+      tags:
+        - Channels
+      parameters: 
+      - name: channelId
+        in: path
+        description: ID of the Channel to fetch
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          applications/json:
+            schema:
+                $ref: '#/components/schemas/Voucher'
+      responses:
+        200:
+          description: Success
+  /actors/channels/{channelId}/vouchers:
+    post:
+      operationId: createVoucher
+      summary: Creates Voucher
+      description: This endpoint accepts voucher details and returns a new signed voucher suitable for off chain transmission to the Channel target for later redemption. Only the Channel payer (creator) can call this endpoint successfully. 
+      tags:
+        - Channels
+      parameters: 
+      - name: channelId
+        in: path
+        description: ID of the Channel to fetch
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          applications/json:
+            schema:
+                $ref: '#/components/schemas/Voucher'
+      responses:
+        200:
+          description: Success
 components:
   schemas:
+    Voucher:
+      type: object
+      properties:
+        channelId:
+          type: string
+          description: The ID of the payment Channel this Voucher is redeemable against. 
+          readOnly: true
+          example: TODO
+        payer:
+          type: string
+          description: The Actor ID (address) of the creator of the payment channel for this voucher. 
+          readOnly: true
+          example: TODO
+        target:
+          type: string
+          description: The Actor ID (address) of the recipient of the funds in this voucher. 
+          readOnly: true 
+          example: TODO
+        amount:
+          type: number
+          description: The amount of FIL this Voucher is worth. This amount is sent to the target when this voucher is redeemed.
+          example: 0.19296864
+        validAt:
+          type: number
+          description: The block height on or after which this Voucher can be redeemed. 
+          example: 2120399
+        condition:
+          type: object
+          description: The condition that must evaluate to true for this Voucher to be redeemed. 
+          example: TODO
+        signature:
+          type: string
+          description: The signature over all the data in this Voucher
+          example: TODO
     Channel:
       type: object
       properties:
@@ -517,11 +640,11 @@ components:
           enum: [channel]
         targetActorId:
           type: string
-          description: The address of the account to which funds will be transferred by this channel upon successful redemption of vouchers
+          description: The address of the account to which funds will be transferred by this Channel upon successful redemption of vouchers
           example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
         amount:
           type: number
-          description: The total amount of FIL that is in this channel and payable to the target
+          description: The total amount of FIL that is in this Channel and payable to the target
           example: 0.19296864
         amountRedeemed:
           type: number
@@ -530,12 +653,12 @@ components:
           example: 0
         agreedEol:
           type: number
-          description: The original chain height at which this channel will expire. Specified upon creation and optionally extended by the creator of the channel.
+          description: The original chain height at which this Channel will expire. Specified upon creation and optionally extended by the creator of the channel.
           example: 2120399
         actualEol:
           type: number
           readOnly: true
-          description: The actual expiration for the payment channel which can differ from agreedEol when the payment channel is in dispute 
+          description: The actual expiration for the payment Channel which can differ from agreedEol when the payment channel is in dispute 
         condition: 
           type: object
           readOnly: true
@@ -544,7 +667,7 @@ components:
         redeemed:
           type: boolean
           readOnly: true
-          description: A flag indicated whether or not Redeem has been called on the payment channel yet. This is necessary because AmountRedeemed can still be zero in the event of a zero-value voucher
+          description: A flag indicated whether or not Redeem has been called on the payment Channel yet. This is necessary because AmountRedeemed can still be zero in the event of a zero-value voucher
           example: true
     Deal:
       type: object
@@ -559,26 +682,26 @@ components:
           enum: [deal]
         minerActorId:
           type: string
-          description: The ID of the storage miner that is fulfilling this deal
+          description: The ID of the storage miner that is fulfilling this Deal
           example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
         clientActorId:
           type: string
           readOnly: true
-          description: The ID of the client initiating the storage deal (will typically be the owner of the current node)
+          description: The ID of the client initiating the storage Deal (will typically be the owner of the current node)
           example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
         pieceId:
           type: string
-          description: The ID of the picee being stored
+          description: The ID of the Picee being stored
           example: QmYRHQCRVSznLwaR8kXtVH4KSZU5fqFPPSkxv9xsJV2QCY
         askId:
           type: string
           writeOnly: true
-          description: The id of the Ask from the target miner for which this deal is to be proposed
+          description: The ID of the Ask from the target miner for which this Deal is to be proposed
           example: 0
         size:
           type: number
           readOnly: true  
-          description: Size of the piece being stored in bytes
+          description: Size of the Piece being stored in bytes
           example: 67003
         totalPrice:
           type: number
@@ -587,7 +710,7 @@ components:
           example: 0.19296864
         duration:
           type: number
-          description: The duration of the storage deal in blocks
+          description: The duration of this storage Deal in blocks
           example: 288000
         paymentInfo: 
           type: object
@@ -595,13 +718,13 @@ components:
           properties: 
             payerClientActorId: 
               type: string
-              description: The address of the owner of the payment channel
+              description: The address of the owner of the payment Channel
             channelId:
               type: string
-              description: The ID of the payment channel the client will use to pay the miner. It must already exist and have sufficient funds locked up in order to create a storage deal.
+              description: The ID of the payment Channel the client will use to pay the miner. It must already exist and have sufficient funds locked up in order to create a storage deal.
             channelMessageId:
               type: string
-              description:  The ID of the message used to create the channel (so the miner can wait for it).
+              description:  The ID of the Message used to create the Channel (so the miner can wait for it).
     Ask:
       type: object
       properties: 
