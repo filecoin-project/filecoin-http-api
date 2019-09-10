@@ -1,11 +1,10 @@
 openapi: 3.0.2
 tags:
   - name: Actors
-  - name: Node
   - name: Blocks
   - name: Messages
+  - name: Node
   - name: Tipsets
-    description: Operations on tipsets
 x-tagGroups:
   - name: Chain Resources
     tags:
@@ -34,6 +33,466 @@ info:
     email: erik.ingenito@protocol.ai
 servers:
 - url: http://127.0.0.1:3453/api/chain/v0
+components:
+  schemas:
+    Voucher:
+      type: object
+      properties:
+        channelId:
+          type: string
+          description: The ID of the payment Channel this Voucher is redeemable against. 
+          readOnly: true
+          example: TODO
+        payer:
+          type: string
+          description: The Actor ID (address) of the creator of the payment channel for this voucher. 
+          readOnly: true
+          example: TODO
+        target:
+          type: string
+          description: The Actor ID (address) of the recipient of the funds in this voucher. 
+          readOnly: true 
+          example: TODO
+        amount:
+          type: number
+          description: The amount of FIL this Voucher is worth. This amount is sent to the target when this voucher is redeemed.
+          example: 0.19296864
+        validAt:
+          type: number
+          description: The block height on or after which this Voucher can be redeemed. 
+          example: 2120399
+        condition:
+          type: object
+          description: The condition that must evaluate to true for this Voucher to be redeemed. 
+          example: TODO
+        signature:
+          type: string
+          description: The signature over all the data in this Voucher
+          example: TODO
+    Channel:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of this Channel
+          readOnly: true
+        kind:
+          type: string
+          readOnly: true
+          enum: [channel]
+        targetActorId:
+          type: string
+          description: The address of the account to which funds will be transferred by this Channel upon successful redemption of vouchers
+          example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
+        amount:
+          type: number
+          description: The total amount of FIL that is in this Channel and payable to the target
+          example: 0.19296864
+        amountRedeemed:
+          type: number
+          readOnly: true
+          description: The total amount of FIL that has already been transfered to the target. This value cannot ever exceed amount. 
+          example: 0
+        agreedEol:
+          type: number
+          description: The original chain height at which this Channel will expire. Specified upon creation and optionally extended by the creator of the channel.
+          example: 2120399
+        actualEol:
+          type: number
+          readOnly: true
+          description: The actual expiration for the payment Channel which can differ from agreedEol when the payment channel is in dispute 
+        condition: 
+          type: object
+          readOnly: true
+          description: The condition specified in the most recent payment voucher for which a redemption attempt was made. 
+          example: TODO
+        redeemed:
+          type: boolean
+          readOnly: true
+          description: A flag indicated whether or not Redeem has been called on the payment Channel yet. This is necessary because AmountRedeemed can still be zero in the event of a zero-value voucher
+          example: true
+    Deal:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of this Deal
+          readOnly: true
+        kind:
+          type: string
+          readOnly: true
+          enum: [deal]
+        minerActorId:
+          type: string
+          description: The ID of the storage miner that is fulfilling this Deal
+          example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
+        clientActorId:
+          type: string
+          readOnly: true
+          description: The ID of the client initiating the storage Deal (will typically be the owner of the current node)
+          example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
+        pieceId:
+          type: string
+          description: The ID of the Picee being stored
+          example: QmYRHQCRVSznLwaR8kXtVH4KSZU5fqFPPSkxv9xsJV2QCY
+        size:
+          type: number
+          readOnly: true  
+          description: Size of the Piece being stored in bytes
+          example: 67003
+        askId:
+          type: string
+          writeOnly: true
+          description: The ID of the Ask from the target miner for which this Deal is to be proposed
+          example: 0
+        totalPrice:
+          type: number
+          readOnly: true
+          description: The total price in FIL that will be paid for the entire storage operation
+          example: 0.19296864
+        duration:
+          type: number
+          description: The duration of this storage Deal in blocks
+          example: 288000
+        status:
+          type: string
+          description: The current status of the Deal 
+          enum: [unknown,rejected,accepted,started,failed,staged,sealing,complete]
+          example: complete
+        paymentInfo: 
+          type: object
+          readOnly: true
+          properties: 
+            payerClientActorId: 
+              type: string
+              description: The address of the owner of the payment Channel
+            channelId:
+              type: string
+              description: The ID of the payment Channel the client will use to pay the miner. It must already exist and have sufficient funds locked up in order to create a storage deal.
+            channelMessageId:
+              type: string
+              description:  The ID of the Message used to create the Channel (so the miner can wait for it).
+    Ask:
+      type: object
+      properties: 
+        id:
+          type: string
+          description: The ID of this Ask
+          readOnly: true
+        kind:
+          type: string
+          enum: [ask]
+        minerId:
+          type: string
+          readOnly: true
+          description: The ID of the miner that published this Ask
+          example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
+        price:
+          type: number
+          description: The price in FIL per byte per blocktime
+          example: 0.00000000001
+        expiry:
+          type: number
+          description: The block height at which this ask expires
+          example: 392265
+    PieceMetadata: 
+      type: object
+      properties:
+        id: 
+          type: string
+          example: QmQXJPWYEnt9GoYu5SXkrKMWovCX78YBjFzRSJF63Zobnj
+          readOnly: true
+    Sector:
+      type: object
+      properties:
+        id:
+          type: string
+        commR:
+          type: string  
+    EmptyActorState:
+      type: object 
+      description: There is no additional state exposed by this actor
+    AccountActorState:
+      $ref: '#/components/schemas/EmptyActorState'
+    InitActorState:
+      type: object
+      properties:
+        nextId: 
+          type: number
+          description: The next numerical ID to allocate to a newly instantiated Actor
+    StorageMarketActorState:
+      type: object
+      properties:
+        totalStorage: 
+          type: number
+          description: Filecoin's total committed storage as of the current block.
+    PaymentBrokerActorState:
+      $ref: '#/components/schemas/EmptyActorState'
+    MinerActorState:
+      type: object
+      properties: 
+        owner:
+          type: string
+          description: The address of the account that owns this miner. Income and returned are paid to this address. This address is also allowed to change the worker address for the miner.
+        worker:
+          type: string
+          description: The address of the worker account for this miner. This will be the key that is used to sign blocks created by this miner, and sign messages sent on behalf of this miner to commit sectors, submit PoSts, and other day to day miner activities.
+        peerId: 
+          type: string
+          description: PeerID references the libp2p identity that the miner is operating.
+        sectorSize:
+          type: number
+          description: SectorSize is the amount of space in each sector committed to the network by this miner.
+        dePledgedCollateral:
+          type: number
+          description: Collateral that is waiting to be withdrawn
+        dePledgeTime: 
+          type: number
+          description: Time at which the depledged collateral may be withdrawn
+        sectors: 
+          type: array
+          items: 
+            $ref: '#/components/schemas/Sector'
+        provingSet:
+          type: array
+          items: 
+            $ref: '#/components/schemas/Sector'
+        currentFaultSet:
+          type: string
+        nextFaultSet:
+          type: string
+        nextDoneSet:
+          type: string
+        arbitratedDeals:
+          type: string
+        power:
+          type: number
+        slashedSet:
+          type: array
+          items: 
+            $ref: '#/components/schemas/Sector'
+        slashedAt:
+          type: number
+        ownedStorageCollateral:
+          type: number
+        provingPeriodEnd:
+          type: number
+    Actor:
+      type: object
+      properties:
+        kind:
+          type: string
+          readOnly: true
+          enum: [actor]
+        id: 
+          type: string
+        role:
+          type: string
+          enum: [init,account,miner,storageMarket,paymentBroker]
+        nonce:
+          type: number
+          description: Nonce is the nonce expected on the next message from this actor. Messages are processed in strict, contiguous nonce order. 
+        balance:
+          type: number
+          description: Balance is the amount of FIL in the actor's account.
+        stateRoot:
+          type: string
+          description: The CID of the root of the actor's state tree.
+        info: 
+            oneOf: 
+              - $ref: '#/components/schemas/AccountActorState'
+              - $ref: '#/components/schemas/InitActorState'
+              - $ref: '#/components/schemas/MinerActorState'
+              - $ref: '#/components/schemas/PaymentBrokerActorState'
+              - $ref: '#/components/schemas/StorageMarketActorState'
+    Block:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [block]
+          readOnly: true
+        id: 
+          type: string
+        header: 
+          $ref: '#/components/schemas/BlockHeader'
+        executedMessages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExecutedMessage'
+    BlockHeader:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [blockHeader]
+          readOnly: true
+        id: 
+          type: string
+        height: 
+          type: number
+        minerId: 
+          type: string
+        messageListId:
+          type: string
+        recieptListId:
+          type: string
+        tickets: 
+          type: array
+          items:
+            type: string
+        electionProof:
+          type: string
+        parentTipsetId:
+          type: string
+        parentWeight:
+          type: number
+        stateRoot:
+          type: string
+        timestamp:
+          type: number
+        blsAggregate:
+          type: string
+        signature:
+          type: string
+    ExecutedMessage:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [executedMessage]
+          readOnly: true
+        id:
+          type: string
+          readOnly: true
+        blockId:
+          type: string
+          readOnly: true
+        message:
+          $ref: '#/components/schemas/Message'
+        exitCode: 
+          type: number
+          readOnly: true
+        return: 
+          type: object
+          readOnly: true
+    Message:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [mxecutedMessage]
+          readOnly: true
+        id:
+          type: string
+          readOnly: true
+        nonce:
+          type: number
+          readOnly: true
+        from: 
+          type: string
+          readOnly: true
+        to: 
+          type: string
+        value:
+          type: number
+        gasPrice: 
+          type: number
+        gasLimit:
+          type: number
+        method: 
+          type: string
+        parameters: 
+          type: object
+        signature: 
+          type: string
+          readOnly: true
+    PeerAddresses: 
+      type: array
+      description: List of peer (network) addresses
+      items:
+        type: string
+        example: /ip4/127.0.0.1/tcp/6000/ipfs/QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
+    Node:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [node]
+          readOnly: true
+        id: 
+          type: string
+          example: QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
+        addresses:
+          $ref: '#/components/schemas/PeerAddresses'
+        version:
+          type: string
+          example: "1.0.2"
+        commit:
+          type: string
+          example: "93540266a2a9972e91947a538ce70dc9c4e8077e"
+        protocol:
+          type: object
+          properties:
+            autoSealInterval: 
+              type: number
+              description: Auto-Seal Interval in Seconds
+            sectorSizes:
+              type: array
+              description: Supoorted sector sizes in bytes
+              items:
+                type: number 
+        bitswapStats:
+          type: object
+          properties:
+            blocksReceived: 
+              type: number
+            blocksSent: 
+              type: number
+            dataReceived: 
+              type: number
+            dataSent: 
+              type: number
+            dupBlksReceived:
+              type: number
+            dupDataReceived: 
+              type: number
+            messagesReceived: 
+              type: number
+            ProvideBufLen: 
+              type: number
+            peers:
+              type: array
+              description: Filecoin Addresses of currently connected peers
+              items:
+                type: string
+                example: 'QmUA8TXLxsfuifpyHPxGfwWgXSCr6omqb6bdQy2KwWQCBz'
+            wantlist:
+              type: array
+              description: CIDs of currently desired content blocks
+              items:
+                type: string
+                example: 'QmQXJPWYEnt9GoYu5SXkrKMWovCX78YBjFzRSJF63Zobnj'
+        config:
+          type: object
+          description: Full JSON representation of the node's current configuration
+    Tipset:
+      type: object
+      properties:
+        kind: 
+          type: string
+          enum: [tipset]
+          readOnly: true
+        id:
+          type: string
+          readOnly: true
+          example: 'zDPWYqFCyaQ9QJHr1qWZ19rFg3YRkcuXREkvpiHRJZhGN5T8SnyJ'
+        height:
+          type: number
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlockHeader'
 paths:
   /actors/actors:
     get:
@@ -591,458 +1050,3 @@ paths:
       responses:
         200:
           description: Success
-components:
-  schemas:
-    Voucher:
-      type: object
-      properties:
-        channelId:
-          type: string
-          description: The ID of the payment Channel this Voucher is redeemable against. 
-          readOnly: true
-          example: TODO
-        payer:
-          type: string
-          description: The Actor ID (address) of the creator of the payment channel for this voucher. 
-          readOnly: true
-          example: TODO
-        target:
-          type: string
-          description: The Actor ID (address) of the recipient of the funds in this voucher. 
-          readOnly: true 
-          example: TODO
-        amount:
-          type: number
-          description: The amount of FIL this Voucher is worth. This amount is sent to the target when this voucher is redeemed.
-          example: 0.19296864
-        validAt:
-          type: number
-          description: The block height on or after which this Voucher can be redeemed. 
-          example: 2120399
-        condition:
-          type: object
-          description: The condition that must evaluate to true for this Voucher to be redeemed. 
-          example: TODO
-        signature:
-          type: string
-          description: The signature over all the data in this Voucher
-          example: TODO
-    Channel:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID of this Channel
-          readOnly: true
-        kind:
-          type: string
-          readOnly: true
-          enum: [channel]
-        targetActorId:
-          type: string
-          description: The address of the account to which funds will be transferred by this Channel upon successful redemption of vouchers
-          example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
-        amount:
-          type: number
-          description: The total amount of FIL that is in this Channel and payable to the target
-          example: 0.19296864
-        amountRedeemed:
-          type: number
-          readOnly: true
-          description: The total amount of FIL that has already been transfered to the target. This value cannot ever exceed amount. 
-          example: 0
-        agreedEol:
-          type: number
-          description: The original chain height at which this Channel will expire. Specified upon creation and optionally extended by the creator of the channel.
-          example: 2120399
-        actualEol:
-          type: number
-          readOnly: true
-          description: The actual expiration for the payment Channel which can differ from agreedEol when the payment channel is in dispute 
-        condition: 
-          type: object
-          readOnly: true
-          description: The condition specified in the most recent payment voucher for which a redemption attempt was made. 
-          example: TODO
-        redeemed:
-          type: boolean
-          readOnly: true
-          description: A flag indicated whether or not Redeem has been called on the payment Channel yet. This is necessary because AmountRedeemed can still be zero in the event of a zero-value voucher
-          example: true
-    Deal:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID of this Deal
-          readOnly: true
-        kind:
-          type: string
-          readOnly: true
-          enum: [deal]
-        minerActorId:
-          type: string
-          description: The ID of the storage miner that is fulfilling this Deal
-          example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
-        clientActorId:
-          type: string
-          readOnly: true
-          description: The ID of the client initiating the storage Deal (will typically be the owner of the current node)
-          example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
-        pieceId:
-          type: string
-          description: The ID of the Picee being stored
-          example: QmYRHQCRVSznLwaR8kXtVH4KSZU5fqFPPSkxv9xsJV2QCY
-        askId:
-          type: string
-          writeOnly: true
-          description: The ID of the Ask from the target miner for which this Deal is to be proposed
-          example: 0
-        size:
-          type: number
-          readOnly: true  
-          description: Size of the Piece being stored in bytes
-          example: 67003
-        totalPrice:
-          type: number
-          readOnly: true
-          description: The total price in FIL that will be paid for the entire storage operation
-          example: 0.19296864
-        duration:
-          type: number
-          description: The duration of this storage Deal in blocks
-          example: 288000
-        paymentInfo: 
-          type: object
-          readOnly: true
-          properties: 
-            payerClientActorId: 
-              type: string
-              description: The address of the owner of the payment Channel
-            channelId:
-              type: string
-              description: The ID of the payment Channel the client will use to pay the miner. It must already exist and have sufficient funds locked up in order to create a storage deal.
-            channelMessageId:
-              type: string
-              description:  The ID of the Message used to create the Channel (so the miner can wait for it).
-    Ask:
-      type: object
-      properties: 
-        id:
-          type: string
-          description: The ID of this Ask
-          readOnly: true
-        kind:
-          type: string
-          enum: [ask]
-        minerId:
-          type: string
-          readOnly: true
-          description: The ID of the miner that published this Ask
-          example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
-        price:
-          type: number
-          description: The price in FIL per byte per blocktime
-          example: 0.00000000001
-        expiry:
-          type: number
-          description: The block height at which this ask expires
-          example: 392265
-    PieceMetadata: 
-      type: object
-      properties:
-        id: 
-          type: string
-          example: QmQXJPWYEnt9GoYu5SXkrKMWovCX78YBjFzRSJF63Zobnj
-          readOnly: true
-    Sector:
-      type: object
-      properties:
-        id:
-          type: string
-        commR:
-          type: string  
-    EmptyActorState:
-      type: object 
-      description: There is no additional state exposed by this actor
-    AccountActorState:
-      $ref: '#/components/schemas/EmptyActorState'
-    InitActorState:
-      type: object
-      properties:
-        nextId: 
-          type: number
-          description: The next numerical ID to allocate to a newly instantiated Actor
-    StorageMarketActorState:
-      type: object
-      properties:
-        totalStorage: 
-          type: number
-          description: Filecoin's total committed storage as of the current block.
-    PaymentBrokerActorState:
-      $ref: '#/components/schemas/EmptyActorState'
-    MinerActorState:
-      type: object
-      properties: 
-        owner:
-          type: string
-          description: The address of the account that owns this miner. Income and returned are paid to this address. This address is also allowed to change the worker address for the miner.
-        worker:
-          type: string
-          description: The address of the worker account for this miner. This will be the key that is used to sign blocks created by this miner, and sign messages sent on behalf of this miner to commit sectors, submit PoSts, and other day to day miner activities.
-        peerId: 
-          type: string
-          description: PeerID references the libp2p identity that the miner is operating.
-        sectorSize:
-          type: number
-          description: SectorSize is the amount of space in each sector committed to the network by this miner.
-        dePledgedCollateral:
-          type: number
-          description: Collateral that is waiting to be withdrawn
-        dePledgeTime: 
-          type: number
-          description: Time at which the depledged collateral may be withdrawn
-        sectors: 
-          type: array
-          items: 
-            $ref: '#/components/schemas/Sector'
-        provingSet:
-          type: array
-          items: 
-            $ref: '#/components/schemas/Sector'
-        currentFaultSet:
-          type: string
-        nextFaultSet:
-          type: string
-        nextDoneSet:
-          type: string
-        arbitratedDeals:
-          type: string
-        power:
-          type: number
-        slashedSet:
-          type: array
-          items: 
-            $ref: '#/components/schemas/Sector'
-        slashedAt:
-          type: number
-        ownedStorageCollateral:
-          type: number
-        provingPeriodEnd:
-          type: number
-    Actor:
-      type: object
-      properties:
-        kind:
-          type: string
-          readOnly: true
-          enum: [actor]
-        id: 
-          type: string
-        role:
-          type: string
-          enum: [init,account,miner,storageMarket,paymentBroker]
-        nonce:
-          type: number
-          description: Nonce is the nonce expected on the next message from this actor. Messages are processed in strict, contiguous nonce order. 
-        balance:
-          type: number
-          description: Balance is the amount of FIL in the actor's account.
-        stateRoot:
-          type: string
-          description: The CID of the root of the actor's state tree.
-        info: 
-            oneOf: 
-              - $ref: '#/components/schemas/AccountActorState'
-              - $ref: '#/components/schemas/InitActorState'
-              - $ref: '#/components/schemas/MinerActorState'
-              - $ref: '#/components/schemas/PaymentBrokerActorState'
-              - $ref: '#/components/schemas/StorageMarketActorState'
-    Block:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [block]
-          readOnly: true
-        id: 
-          type: string
-        header: 
-          $ref: '#/components/schemas/BlockHeader'
-        executedMessages:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExecutedMessage'
-    BlockHeader:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [blockHeader]
-          readOnly: true
-        id: 
-          type: string
-        height: 
-          type: number
-        minerId: 
-          type: string
-        messageListId:
-          type: string
-        recieptListId:
-          type: string
-        tickets: 
-          type: array
-          items:
-            type: string
-        electionProof:
-          type: string
-        parentTipsetId:
-          type: string
-        parentWeight:
-          type: number
-        stateRoot:
-          type: string
-        timestamp:
-          type: number
-        blsAggregate:
-          type: string
-        signature:
-          type: string
-    ExecutedMessage:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [executedMessage]
-          readOnly: true
-        id:
-          type: string
-          readOnly: true
-        blockId:
-          type: string
-          readOnly: true
-        message:
-          $ref: '#/components/schemas/Message'
-        exitCode: 
-          type: number
-          readOnly: true
-        return: 
-          type: object
-          readOnly: true
-    Message:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [mxecutedMessage]
-          readOnly: true
-        id:
-          type: string
-          readOnly: true
-        nonce:
-          type: number
-          readOnly: true
-        from: 
-          type: string
-          readOnly: true
-        to: 
-          type: string
-        value:
-          type: number
-        gasPrice: 
-          type: number
-        gasLimit:
-          type: number
-        method: 
-          type: string
-        parameters: 
-          type: object
-        signature: 
-          type: string
-          readOnly: true
-    PeerAddresses: 
-      type: array
-      description: List of peer (network) addresses
-      items:
-        type: string
-        example: /ip4/127.0.0.1/tcp/6000/ipfs/QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
-    Node:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [node]
-          readOnly: true
-        id: 
-          type: string
-          example: QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
-        addresses:
-          $ref: '#/components/schemas/PeerAddresses'
-        version:
-          type: string
-          example: "1.0.2"
-        commit:
-          type: string
-          example: "93540266a2a9972e91947a538ce70dc9c4e8077e"
-        protocol:
-          type: object
-          properties:
-            autoSealInterval: 
-              type: number
-              description: Auto-Seal Interval in Seconds
-            sectorSizes:
-              type: array
-              description: Supoorted sector sizes in bytes
-              items:
-                type: number 
-        bitswapStats:
-          type: object
-          properties:
-            blocksReceived: 
-              type: number
-            blocksSent: 
-              type: number
-            dataReceived: 
-              type: number
-            dataSent: 
-              type: number
-            dupBlksReceived:
-              type: number
-            dupDataReceived: 
-              type: number
-            messagesReceived: 
-              type: number
-            ProvideBufLen: 
-              type: number
-            peers:
-              type: array
-              description: Filecoin Addresses of currently connected peers
-              items:
-                type: string
-                example: 'QmUA8TXLxsfuifpyHPxGfwWgXSCr6omqb6bdQy2KwWQCBz'
-            wantlist:
-              type: array
-              description: CIDs of currently desired content blocks
-              items:
-                type: string
-                example: 'QmQXJPWYEnt9GoYu5SXkrKMWovCX78YBjFzRSJF63Zobnj'
-        config:
-          type: object
-          description: Full JSON representation of the node's current configuration
-    Tipset:
-      type: object
-      properties:
-        kind: 
-          type: string
-          enum: [tipset]
-          readOnly: true
-        id:
-          type: string
-          readOnly: true
-          example: 'zDPWYqFCyaQ9QJHr1qWZ19rFg3YRkcuXREkvpiHRJZhGN5T8SnyJ'
-        height:
-          type: number
-        blocks:
-          type: array
-          items:
-            $ref: '#/components/schemas/BlockHeader'
