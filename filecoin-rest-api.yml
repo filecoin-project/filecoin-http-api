@@ -5,6 +5,51 @@ tags:
   - name: Messages
   - name: Node
   - name: Tipsets
+  - name: ActorModel
+    x-displayName: Actor
+    description: |
+      This is a description
+      <SchemaDefinition schemaRef="#/components/schemas/Actor"/>
+  - name: AskModel
+    x-displayName: Ask
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Ask"/>
+  - name: BlockModel
+    x-displayName: Block
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Block"/>
+  - name: BlockHeaderModel
+    x-displayName: BlockHeader
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/BlockHeader"/>
+  - name: ChannelModel
+    x-displayName: Channel
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Channel"/>
+  - name: DealModel
+    x-displayName: Deal
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Deal"/>
+  - name: ExecutedMessageModel
+    x-displayName: ExecutedMessage
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/ExecutedMessage"/>
+  - name: MessageModel
+    x-displayName: Message
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Message"/>
+  - name: NodeModel
+    x-displayName: Node
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Node"/>
+  - name: TipsetModel
+    x-displayName: Tipset
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Tipset"/>
+  - name: VoucherModel
+    x-displayName: Voucher
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Voucher"/>
 x-tagGroups:
   - name: Chain Resources
     tags:
@@ -24,6 +69,19 @@ x-tagGroups:
     tags:
       - Asks
       - Deals
+  - name: Models
+    tags:
+      - ActorModel
+      - AskModel
+      - BlockModel
+      - BlockHeaderModel
+      - ChannelModel
+      - DealModel
+      - ExecutedMessageModel
+      - MessageModel
+      - NodeModel
+      - TipsetModel
+      - VoucherModel
 info:
   title: Filecoin JSON REST API
   description: Filecoin JSON REST API Description
