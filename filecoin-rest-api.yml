@@ -96,6 +96,10 @@ components:
     Voucher:
       type: object
       properties:
+        kind:
+          type: string
+          readOnly: true
+          enum: [voucher]
         channelId:
           type: string
           description: The ID of the payment Channel this Voucher is redeemable against. 
@@ -439,7 +443,7 @@ components:
       properties:
         kind:
           type: string
-          enum: [mxecutedMessage]
+          enum: [message]
           readOnly: true
         id:
           type: string
@@ -660,7 +664,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Message'
+                $ref: '#/components/schemas/Block'
   /chain/messages:
     post:
       operationId: createMessage
