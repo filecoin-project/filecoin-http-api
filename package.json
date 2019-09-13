@@ -3,9 +3,11 @@
   "description": "Filecoin JSON REST API OpenAPI Specification",
   "version": "0.1.0",
   "scripts": {
-      "serve": "speccy serve ./filecoin-rest-api.yml"
+    "serve": "redoc-cli serve ./filecoin-rest-api.yml -p 5000 -w"
   },
   "dependencies": {
+    "redoc": "^2.0.0-rc.14",
+    "redoc-cli": "^0.8.6",
     "speccy": "^0.11.0"
   },
   "devDependencies": {}
