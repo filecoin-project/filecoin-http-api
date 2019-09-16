@@ -94,13 +94,17 @@ servers:
 components:
   schemas:
     Actor: 
-      $ref: 'actors.yml#/models/Actor' 
+      $ref: 'actors.yml#/models/Actor'
+    Ask:
+      $ref: 'market.yml#/models/Ask'
     Block:
       $ref: 'chain.yml#/models/Block'
     BlockHeader:
       $ref: 'chain.yml#/models/BlockHeader'
     Channel:
       $ref: 'channels.yml#/models/Channel'
+    Deal:
+      $ref: 'market.yml#/models/Deal'
     ExecutedMessage:
       $ref: 'chain.yml#/models/ExecutedMessage'
     Message:
@@ -109,90 +113,6 @@ components:
       $ref: 'chain.yml#/models/Tipset'
     Voucher:
       $ref: 'channels.yml#/models/Voucher'
-    Deal:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID of this Deal
-          readOnly: true
-        kind:
-          type: string
-          readOnly: true
-          enum: [deal]
-        minerActorId:
-          type: string
-          description: The ID of the storage miner that is fulfilling this Deal
-          example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
-        clientActorId:
-          type: string
-          readOnly: true
-          description: The ID of the client initiating the storage Deal (will typically be the owner of the current node)
-          example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
-        pieceId:
-          type: string
-          description: The ID of the Picee being stored
-          example: QmYRHQCRVSznLwaR8kXtVH4KSZU5fqFPPSkxv9xsJV2QCY
-        size:
-          type: number
-          readOnly: true  
-          description: Size of the Piece being stored in bytes
-          example: 67003
-        askId:
-          type: string
-          writeOnly: true
-          description: The ID of the Ask from the target miner for which this Deal is to be proposed
-          example: 0
-        totalPrice:
-          type: number
-          readOnly: true
-          description: The total price in FIL that will be paid for the entire storage operation
-          example: 0.19296864
-        duration:
-          type: number
-          description: The duration of this storage Deal in blocks
-          example: 288000
-        status:
-          type: string
-          description: The current status of the Deal 
-          enum: [unknown,rejected,accepted,started,failed,staged,sealing,complete]
-          example: complete
-        paymentInfo: 
-          type: object
-          readOnly: true
-          properties: 
-            payerClientActorId: 
-              type: string
-              description: The address of the owner of the payment Channel
-            channelId:
-              type: string
-              description: The ID of the payment Channel the client will use to pay the miner. It must already exist and have sufficient funds locked up in order to create a storage deal.
-            channelMessageId:
-              type: string
-              description:  The ID of the Message used to create the Channel (so the miner can wait for it).
-    Ask:
-      type: object
-      properties: 
-        id:
-          type: string
-          description: The ID of this Ask
-          readOnly: true
-        kind:
-          type: string
-          enum: [ask]
-        minerId:
-          type: string
-          readOnly: true
-          description: The ID of the miner that published this Ask
-          example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
-        price:
-          type: number
-          description: The price in FIL per byte per blocktime
-          example: 0.00000000001
-        expiry:
-          type: number
-          description: The block height at which this ask expires
-          example: 392265
     PieceMetadata: 
       type: object
       properties:
@@ -349,147 +269,11 @@ paths:
               schema:
                 type: string
                 format: binary
-                description: The raw bytes of the originally imported data. 
-  /market/asks:
-    get:
-      operationId: listAsks
-      summary: Lists all Asks in the market
-      description: This endpoint returns all Asks known to the current node ordered lexically by the Ask ID
-      tags:
-        - Asks
-      parameters:
-      - name: minerId
-        in: query
-        description: Filter returned asks by minerId. Only Asks from this miner will be returned.
-        required: false
-        example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
-        schema:
-          type: string
-      - name: active
-        in: query
-        description: Filter returned asks to include only those that are still active, meaning the current node's tipset height doesn't exceed that of the Ask's specified expiration.
-        required: false
-        example: true
-        schema:
-          type: boolean
-      - name: nextPageToken
-        in: query
-        description: Next page token
-        required: false
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Ask'
-    post:
-      operationId: createAsk
-      summary: Order this mining node to publish a new Ask on the network
-      description: This method creates a new storage market ask and publishes it for storage buyers to find and act on.
-      tags: 
-        - Asks
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Ask'
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Ask'
-  /market/asks/{askId}:
-    get:
-      operationId: getAskById
-      summary: Fetch Ask data 
-      description: Fetch data about an Ask by the Ask ID.
-      tags:
-        - Asks
-      parameters: 
-      - name: askId
-        in: path
-        description: ID of the Ask to fetch. 
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: If the request succeeds, the server returns the requested Ask.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Ask'
-  /market/deals:
-    get:
-      operationId: getDeals
-      summary: Fetch Deal information known to this node
-      description: This endpoint returns a list of all deals known to the current node.  
-      tags:
-        - Deals
-      parameters:
-      - name: minerId
-        in: query
-        description: Filter returned Deals by minerId. Only Deals made with (or proposed to) the specified miner will be returned.
-        required: false
-        example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
-        schema:
-          type: string
-      - name: clientId
-        in: query
-        description: Filter returned Deals by clientId. Only Deals initiated by the specified client will be returned.
-        required: false
-        example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
-        schema:
-          type: string
-      - name: pieceId
-        in: query
-        description: Filter returned Deals by pieceId. Only Deals made to store the specified pieceId will be returned.
-        required: false
-        example: QmYRHQCRVSznLwaR8kXtVH4KSZU5fqFPPSkxv9xsJV2QCY
-        schema:
-          type: string
-      - name: nextPageToken
-        in: query
-        description: Next page token
-        required: false
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Deal'
-    post:
-      operationId: createDeal
-      summary: Initiate a storage deal
-      description: This endpoint initiates a storage deal with a storage miner. It will create an appropriate payment Channel and vouchers, and pass the deal to the target storage miner to await acceptance or rejection.
-      tags:
-        - Deals
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Deal'
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Deal'
+                description: The raw bytes of the originally imported data.
+  /actors/channels/{channelId}/redeem:
+    $ref: 'channels.yml#/endpoints/channel_resource_redeem'
+  /actors/channels/{channelId}/vouchers:
+    $ref: 'channels.yml#/endpoints/channel_resource_vouchers'
   /channels:
     $ref: 'channels.yml#/endpoints/channels_collection'
   /channels/{channelId}: # Right now it's not possible to look up Channels by ID alone, only by Payee/ID, channel ID could just be a concatenation
@@ -500,7 +284,9 @@ paths:
     $ref: 'channels.yml#/endpoints/channel_resource_cancel'
   /channels/{channelId}/reclaim:
     $ref: 'channels.yml#/endpoints/channel_resource_reclaim'
-  /actors/channels/{channelId}/redeem:
-    $ref: 'channels.yml#/endpoints/channel_resource_redeem'
-  /actors/channels/{channelId}/vouchers:
-    $ref: 'channels.yml#/endpoints/channel_resource_vouchers'
+  /market/asks:
+    $ref: 'market.yml#/endpoints/asks_collection'
+  /market/asks/{askId}:
+    $ref: 'market.yml#/endpoints/ask_resource'
+  /market/deals:
+    $ref: 'market.yml#/endpoints/deals_collection'
