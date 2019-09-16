@@ -59,6 +59,8 @@ x-tagGroups:
   - name: Actor Endpoints
     tags:
       - Actors
+  - name: Channel Endpoints
+    tags:
       - Channels
   - name: Node Control Endpoints
     tags:
@@ -109,93 +111,24 @@ components:
       $ref: 'chain.yml#/models/ExecutedMessage'
     Message:
       $ref: 'chain.yml#/models/Message'
+    Node:
+      $ref: 'control.yml#/models/Node'
+    PeerAddresses:
+      $ref: 'control.yml#/models/PieceMetadata'
+    PieceMetadata:
+      $ref: 'control.yml#/models/PieceMetadata'
     Tipset:
       $ref: 'chain.yml#/models/Tipset'
     Voucher:
       $ref: 'channels.yml#/models/Voucher'
-    PieceMetadata: 
-      type: object
-      properties:
-        id: 
-          type: string
-          example: QmQXJPWYEnt9GoYu5SXkrKMWovCX78YBjFzRSJF63Zobnj
-          readOnly: true
     Sector:
+#      $ref: 'control.yml#/models/Sector'
       type: object
       properties:
         id:
           type: string
         commR:
           type: string
-    PeerAddresses: 
-      type: array
-      description: List of peer (network) addresses
-      items:
-        type: string
-        example: /ip4/127.0.0.1/tcp/6000/ipfs/QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
-    Node:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [node]
-          readOnly: true
-        id: 
-          type: string
-          example: QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
-        addresses:
-          $ref: '#/components/schemas/PeerAddresses'
-        version:
-          type: string
-          example: "1.0.2"
-        commit:
-          type: string
-          example: "93540266a2a9972e91947a538ce70dc9c4e8077e"
-        protocol:
-          type: object
-          properties:
-            autoSealInterval: 
-              type: number
-              description: Auto-Seal Interval in Seconds
-            sectorSizes:
-              type: array
-              description: Supoorted sector sizes in bytes
-              items:
-                type: number 
-        bitswapStats:
-          type: object
-          properties:
-            blocksReceived: 
-              type: number
-            blocksSent: 
-              type: number
-            dataReceived: 
-              type: number
-            dataSent: 
-              type: number
-            dupBlksReceived:
-              type: number
-            dupDataReceived: 
-              type: number
-            messagesReceived: 
-              type: number
-            ProvideBufLen: 
-              type: number
-            peers:
-              type: array
-              description: Filecoin Addresses of currently connected peers
-              items:
-                type: string
-                example: 'QmUA8TXLxsfuifpyHPxGfwWgXSCr6omqb6bdQy2KwWQCBz'
-            wantlist:
-              type: array
-              description: CIDs of currently desired content blocks
-              items:
-                type: string
-                example: 'QmQXJPWYEnt9GoYu5SXkrKMWovCX78YBjFzRSJF63Zobnj'
-        config:
-          type: object
-          description: Full JSON representation of the node's current configuration
 paths:
   /actors:
     $ref: './actors.yml#/endpoints/actors_collection'
@@ -214,62 +147,11 @@ paths:
   /chain/executed-messages/{executedMessageId}:
     $ref: './chain.yml#/endpoints/executed_message_resource'
   /control/node:
-    get:
-      operationId: getNode
-      summary: Return Node information
-      description: Get information about the current Filecoin Node.
-      tags:
-        - Node
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Node'
+    $ref: './control.yml#/endpoints/node_resource'
   /control/pieces:
-    post:
-      operationId: createPiece
-      summary: Add a Piece to local storage
-      description: This method imports data into the local node's temporary storage so that it can be transferred to a storage miner.  
-      tags: 
-        - Pieces
-      requestBody:
-        content:
-          application/octet-stream:
-            schema:
-              type: string
-              format: binary
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PieceMetadata'
+    $ref: './control.yml#/endpoints/pieces_collection'
   /control/pieces/{pieceId}:
-    get:
-      operationId: getPieceById
-      summary: Fetch piece data 
-      description: Fetch piece data from the local node's temporary storage.
-      tags:
-        - Pieces
-      parameters: 
-      - name: pieceId
-        in: path
-        description: ID of the piece previously returned by corresponding createPiece POST method. 
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: If the request succeeds, the server returns the original data used to create the piece.
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-                description: The raw bytes of the originally imported data.
+    $ref: './control.yml#/endpoints/piece_resource'
   /actors/channels/{channelId}/redeem:
     $ref: 'channels.yml#/endpoints/channel_resource_redeem'
   /actors/channels/{channelId}/vouchers:
