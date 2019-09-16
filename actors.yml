@@ -62,11 +62,11 @@ models:
       sectors: 
         type: array
         items: 
-          $ref: 'filecoin-rest-api.yml#/components/schemas/Sector'
+          $ref: 'actors.yml#/models/Sector'
       provingSet:
         type: array
         items: 
-          $ref: 'filecoin-rest-api.yml#/components/schemas/Sector'
+          $ref: 'actors.yml#/models/Sector'
       currentFaultSet:
         type: string
       nextFaultSet:
@@ -80,7 +80,7 @@ models:
       slashedSet:
         type: array
         items: 
-          $ref: 'filecoin-rest-api.yml#/components/schemas/Sector'
+          $ref: 'actors.yml#/models/Sector'
       slashedAt:
         type: number
       ownedStorageCollateral:
@@ -89,6 +89,13 @@ models:
         type: number
   PaymentBrokerActorState:
     $ref: '#/models/EmptyActorState'
+  Sector:
+    type: object
+    properties:
+      id:
+        type: string
+      commR:
+        type: string
   StorageMarketActorState:
     type: object
     properties:
