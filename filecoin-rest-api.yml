@@ -1,27 +1,24 @@
 openapi: 3.0.2
 tags:
-  - name: Actors
-  - name: Blocks
-  - name: Messages
-  - name: Node
-  - name: Tipsets
   - name: ActorModel
     x-displayName: Actor
     description: |
       This is a description
       <SchemaDefinition schemaRef="#/components/schemas/Actor"/>
+  - name: Actors
   - name: AskModel
     x-displayName: Ask
     description: |
       <SchemaDefinition schemaRef="#/components/schemas/Ask"/>
-  - name: BlockModel
-    x-displayName: Block
-    description: |
-      <SchemaDefinition schemaRef="#/components/schemas/Block"/>
   - name: BlockHeaderModel
     x-displayName: BlockHeader
     description: |
       <SchemaDefinition schemaRef="#/components/schemas/BlockHeader"/>
+  - name: BlockModel
+    x-displayName: Block
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Block"/>
+  - name: Blocks
   - name: ChannelModel
     x-displayName: Channel
     description: |
@@ -38,6 +35,8 @@ tags:
     x-displayName: Message
     description: |
       <SchemaDefinition schemaRef="#/components/schemas/Message"/>
+  - name: Messages
+  - name: Node
   - name: NodeModel
     x-displayName: Node
     description: |
@@ -46,6 +45,7 @@ tags:
     x-displayName: Tipset
     description: |
       <SchemaDefinition schemaRef="#/components/schemas/Tipset"/>
+  - name: Tipsets
   - name: VoucherModel
     x-displayName: Voucher
     description: |
@@ -93,6 +93,16 @@ servers:
 - url: http://127.0.0.1:3453/api/chain/v0
 components:
   schemas:
+    Block:
+      $ref: 'chain.yml#/models/Block'
+    BlockHeader:
+      $ref: 'chain.yml#/models/BlockHeader'
+    ExecutedMessage:
+      $ref: 'chain.yml#/models/ExecutedMessage'
+    Message:
+      $ref: 'chain.yml#/models/Message'
+    Tipset:
+      $ref: 'chain.yml#/models/Tipset'
     Voucher:
       type: object
       properties:
@@ -367,108 +377,6 @@ components:
               - $ref: '#/components/schemas/MinerActorState'
               - $ref: '#/components/schemas/PaymentBrokerActorState'
               - $ref: '#/components/schemas/StorageMarketActorState'
-    Block:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [block]
-          readOnly: true
-        id: 
-          type: string
-        header: 
-          $ref: '#/components/schemas/BlockHeader'
-        executedMessages:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExecutedMessage'
-    BlockHeader:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [blockHeader]
-          readOnly: true
-        id: 
-          type: string
-        height: 
-          type: number
-        minerId: 
-          type: string
-        messageListId:
-          type: string
-        recieptListId:
-          type: string
-        tickets: 
-          type: array
-          items:
-            type: string
-        electionProof:
-          type: string
-        parentTipsetId:
-          type: string
-        parentWeight:
-          type: number
-        stateRoot:
-          type: string
-        timestamp:
-          type: number
-        blsAggregate:
-          type: string
-        signature:
-          type: string
-    ExecutedMessage:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [executedMessage]
-          readOnly: true
-        id:
-          type: string
-          readOnly: true
-        blockId:
-          type: string
-          readOnly: true
-        message:
-          $ref: '#/components/schemas/Message'
-        exitCode: 
-          type: number
-          readOnly: true
-        return: 
-          type: object
-          readOnly: true
-    Message:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [message]
-          readOnly: true
-        id:
-          type: string
-          readOnly: true
-        nonce:
-          type: number
-          readOnly: true
-        from: 
-          type: string
-          readOnly: true
-        to: 
-          type: string
-        value:
-          type: number
-        gasPrice: 
-          type: number
-        gasLimit:
-          type: number
-        method: 
-          type: string
-        parameters: 
-          type: object
-        signature: 
-          type: string
-          readOnly: true
     PeerAddresses: 
       type: array
       description: List of peer (network) addresses
@@ -538,23 +446,6 @@ components:
         config:
           type: object
           description: Full JSON representation of the node's current configuration
-    Tipset:
-      type: object
-      properties:
-        kind: 
-          type: string
-          enum: [tipset]
-          readOnly: true
-        id:
-          type: string
-          readOnly: true
-          example: 'zDPWYqFCyaQ9QJHr1qWZ19rFg3YRkcuXREkvpiHRJZhGN5T8SnyJ'
-        height:
-          type: number
-        blocks:
-          type: array
-          items:
-            $ref: '#/components/schemas/BlockHeader'
 paths:
   /actors/actors:
     get:
@@ -601,131 +492,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/Actor'
   /chain/tipsets:
-    get:
-      operationId: listTipsets
-      summary: List Tipsets
-      description: List Tipsets currently known to this node in reverse height order
-      tags:
-        - Tipsets
-      parameters:
-      - name: nextPageToken
-        in: query
-        description: Next page token
-        required: false
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Tipset'
+    $ref: './chain.yml#/endpoints/tipsets_collection'
   /chain/tipsets/{tipsetId}:
-    get:
-      operationId: getTipsetById
-      summary: Fetch a Tipset by ID
-      description: Return information about the Tipset with the specified ID
-      tags:
-        - Tipsets
-      parameters: 
-      - name: tipsetId
-        in: path
-        description: ID of the Tipset to fetch
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Tipset'
+    $ref: './chain.yml#/endpoints/tipset_resource'
   /chain/blocks/{blockId}:
-    get:
-      operationId: getBlockById
-      summary: Find block by ID
-      description: Return information about the Block with the specified ID
-      tags:
-        - Blocks
-      parameters: 
-      - name: blockId
-        in: path
-        description: ID of the Block to fetch
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Block'
+    $ref: './chain.yml#/endpoints/block_resource'
   /chain/messages:
-    post:
-      operationId: createMessage
-      summary: Send a Message
-      description: This method sends a new Message to an Actor recipient.
-      tags: 
-        - Messages
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Message'
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
+    $ref: './chain.yml#/endpoints/messages_collection'
   /chain/messages/{messageId}:
-    get:
-      operationId: getMessageById
-      summary: Find Message by ID
-      description: Return information about the Message with the specified ID
-      tags: 
-        - nessages
-      parameters: 
-      - name: messageId
-        in: path
-        description: ID of the message to fetch
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
+    $ref: './chain.yml#/endpoints/message_resource'
   /chain/executed-messages/{executedMessageId}:
-    get:
-      operationId: getExecutedMessageById
-      summary: Find ExecutedMessage by ID
-      description: Return information about the ExecutedMessage with the specified ID. An executed Message is one that has been included in a valid block in the chain. It includes return value and status information.
-      tags:
-        - Messages
-      parameters: 
-      - name: executedMessageId
-        in: path
-        description: ID of the executed message to fetch
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExecutedMessage'
+    $ref: './chain.yml#/endpoints/executed_message_resource'
   /control/node:
     get:
       operationId: getNode
