@@ -99,6 +99,8 @@ components:
       $ref: 'chain.yml#/models/Block'
     BlockHeader:
       $ref: 'chain.yml#/models/BlockHeader'
+    Channel:
+      $ref: 'channels.yml#/models/Channel'
     ExecutedMessage:
       $ref: 'chain.yml#/models/ExecutedMessage'
     Message:
@@ -106,85 +108,7 @@ components:
     Tipset:
       $ref: 'chain.yml#/models/Tipset'
     Voucher:
-      type: object
-      properties:
-        kind:
-          type: string
-          readOnly: true
-          enum: [voucher]
-        channelId:
-          type: string
-          description: The ID of the payment Channel this Voucher is redeemable against. 
-          readOnly: true
-          example: TODO
-        payer:
-          type: string
-          description: The Actor ID (address) of the creator of the payment channel for this voucher. 
-          readOnly: true
-          example: TODO
-        target:
-          type: string
-          description: The Actor ID (address) of the recipient of the funds in this voucher. 
-          readOnly: true 
-          example: TODO
-        amount:
-          type: number
-          description: The amount of FIL this Voucher is worth. This amount is sent to the target when this voucher is redeemed.
-          example: 0.19296864
-        validAt:
-          type: number
-          description: The block height on or after which this Voucher can be redeemed. 
-          example: 2120399
-        condition:
-          type: object
-          description: The condition that must evaluate to true for this Voucher to be redeemed. 
-          example: TODO
-        signature:
-          type: string
-          description: The signature over all the data in this Voucher
-          example: TODO
-    Channel:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID of this Channel
-          readOnly: true
-        kind:
-          type: string
-          readOnly: true
-          enum: [channel]
-        targetActorId:
-          type: string
-          description: The address of the account to which funds will be transferred by this Channel upon successful redemption of vouchers
-          example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
-        amount:
-          type: number
-          description: The total amount of FIL that is in this Channel and payable to the target
-          example: 0.19296864
-        amountRedeemed:
-          type: number
-          readOnly: true
-          description: The total amount of FIL that has already been transfered to the target. This value cannot ever exceed amount. 
-          example: 0
-        agreedEol:
-          type: number
-          description: The original chain height at which this Channel will expire. Specified upon creation and optionally extended by the creator of the channel.
-          example: 2120399
-        actualEol:
-          type: number
-          readOnly: true
-          description: The actual expiration for the payment Channel which can differ from agreedEol when the payment channel is in dispute 
-        condition: 
-          type: object
-          readOnly: true
-          description: The condition specified in the most recent payment voucher for which a redemption attempt was made. 
-          example: TODO
-        redeemed:
-          type: boolean
-          readOnly: true
-          description: A flag indicated whether or not Redeem has been called on the payment Channel yet. This is necessary because AmountRedeemed can still be zero in the event of a zero-value voucher
-          example: true
+      $ref: 'channels.yml#/models/Voucher'
     Deal:
       type: object
       properties:
@@ -566,192 +490,17 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Deal'
-  /actors/channels:
-    get:
-      operationId: listChannels
-      summary: List Channels
-      description: List all payment channels known to this node
-      tags:
-        - Channels
-      parameters:
-      - name: nextPageToken
-        in: query
-        description: Next page token
-        required: false
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Channel'
-    post: 
-      operationId: createChannel
-      summary: Create new payment Channel
-      description: This endpoint creates a new payment Channel with the specified characteristics
-      tags:
-        - Channels
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Channel'
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Channel'
-  /actors/channels/{channelId}: # Right now it's not possible to look up Channels by ID alone, only by Payee/ID, channel ID could just be a concatenation
-    get:
-      operationId: getChannelById
-      summary: Find Channel by ID
-      description: Find a payment Channel by ID and return it
-      tags:
-        - Channels
-      parameters: 
-      - name: channelId
-        in: path
-        description: ID of the Channel to fetch
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Channel'
-    patch:
-      operationId: extendChannelById
-      summary: Extend duration of Channel
-      description: This endpoint extends the duration of an existing payment Channel, increasing the block height at which the Channel will timeout. Only the payer (creator) or the channel can successfully call this endpoint. 
-      tags:
-        - Channels
-      parameters: 
-      - name: channelId
-        in: path
-        description: ID of the Channel to fetch
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          applications/json:
-            schema:
-              type: object
-              properties:
-                agreedEol:
-                  type: number
-                  description: The new chain (increased) height at which this channel will expire.
-                  example: 2120399
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Channel'
-  /actors/channels/{channelId}/close:
-    post:
-      operationId: closeChannel
-      summary: Close Channel
-      description: This endpoint closes the specified payment Channel and returns all unredeemed funds to the payee (the Channel's creator). Upon completion this Channel is effectively deleted and can never be used again. This method can only be called by target of the Channel with a valid voucher - any other invocation is an error.
-      tags:
-        - Channels
-      parameters: 
-      - name: channelId
-        in: path
-        description: ID of the Channel to fetch
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-  /actors/channels/{channelId}/cancel:
-    post:
-      operationId: cancelChannel
-      summary: Schedule Channel for cancellation
-      description: This endpoint reduces the actual eol (effective end date) of the Channel in an attempt to free up the funds in the channel for earlier reclaming. This endpoint can only successfullly be called by the Channel's payer as the cancel message needs to originate from that account. Cancel doesn't immediately close a channel but instead reduces the lifetime of the channel leaving a grace period during which the payee can undo the cancellation by submitting a valid voucher, thereby proving that the channel is still in use.
-      tags:
-        - Channels
-      parameters: 
-      - name: channelId
-        in: path
-        description: ID of the Channel to cancel
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
-  /actors/channels/{channelId}/reclaim:
-    post:
-      operationId: reclaimChannel
-      summary: Reclaim unspent funds in Channel
-      description: This endpoint is used by the creator (payer) of a Channel to reclaim unspent funds when a Channel has timed out (the chain height has exceeded the eol of the Channel). It can only successfully be called by the Channel's payer on a timed out Channel.
-      tags:
-        - Channels
-      parameters: 
-      - name: channelId
-        in: path
-        description: ID of the Channel to reclaim
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: Success
+  /channels:
+    $ref: 'channels.yml#/endpoints/channels_collection'
+  /channels/{channelId}: # Right now it's not possible to look up Channels by ID alone, only by Payee/ID, channel ID could just be a concatenation
+    $ref: 'channels.yml#/endpoints/channel_resource'
+  /channels/{channelId}/close:
+    $ref: 'channels.yml#/endpoints/channel_resource_close'
+  /channels/{channelId}/cancel:
+    $ref: 'channels.yml#/endpoints/channel_resource_cancel'
+  /channels/{channelId}/reclaim:
+    $ref: 'channels.yml#/endpoints/channel_resource_reclaim'
   /actors/channels/{channelId}/redeem:
-    post:
-      operationId: redeemVoucher
-      summary: Redeem Voucher
-      description: This endpoint accepts a voucher from the Channel target and redeems it. Upon checking the validity and successfully checking the voucher's condition the specified funds will be transfered from the channel to the target. 
-      tags:
-        - Channels
-      parameters: 
-      - name: channelId
-        in: path
-        description: ID of the Channel to fetch
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          applications/json:
-            schema:
-                $ref: '#/components/schemas/Voucher'
-      responses:
-        200:
-          description: Success
+    $ref: 'channels.yml#/endpoints/channel_resource_redeem'
   /actors/channels/{channelId}/vouchers:
-    post:
-      operationId: createVoucher
-      summary: Creates Voucher
-      description: This endpoint accepts voucher details and returns a new signed voucher suitable for off chain transmission to the Channel target for later redemption. Only the Channel payer (creator) can call this endpoint successfully. 
-      tags:
-        - Channels
-      parameters: 
-      - name: channelId
-        in: path
-        description: ID of the Channel to fetch
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          applications/json:
-            schema:
-                $ref: '#/components/schemas/Voucher'
-      responses:
-        200:
-          description: Success
+    $ref: 'channels.yml#/endpoints/channel_resource_vouchers'
