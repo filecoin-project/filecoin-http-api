@@ -1,0 +1,142 @@
+models:
+  Actor:
+    type: object
+    properties:
+      kind:
+        type: string
+        readOnly: true
+        enum: [actor]
+      id: 
+        type: string
+      role:
+        type: string
+        enum: [init,account,miner,storageMarket,paymentBroker]
+      nonce:
+        type: number
+        description: Nonce is the nonce expected on the next message from this actor. Messages are processed in strict, contiguous nonce order. 
+      balance:
+        type: number
+        description: Balance is the amount of FIL in the actor's account.
+      stateRoot:
+        type: string
+        description: The CID of the root of the actor's state tree.
+      info: 
+          oneOf: 
+            - $ref: '#/models/AccountActorState'
+            - $ref: '#/models/InitActorState'
+            - $ref: '#/models/MinerActorState'
+            - $ref: '#/models/PaymentBrokerActorState'
+            - $ref: '#/models/StorageMarketActorState'
+  AccountActorState:
+    $ref: '#/models/EmptyActorState'
+  EmptyActorState:
+    type: object 
+    description: There is no additional state exposed by this actor
+  InitActorState:
+    type: object
+    properties:
+      nextId: 
+        type: number
+        description: The next numerical ID to allocate to a newly instantiated Actor
+  MinerActorState:
+    type: object
+    properties: 
+      owner:
+        type: string
+        description: The address of the account that owns this miner. Income and returned are paid to this address. This address is also allowed to change the worker address for the miner.
+      worker:
+        type: string
+        description: The address of the worker account for this miner. This will be the key that is used to sign blocks created by this miner, and sign messages sent on behalf of this miner to commit sectors, submit PoSts, and other day to day miner activities.
+      peerId: 
+        type: string
+        description: PeerID references the libp2p identity that the miner is operating.
+      sectorSize:
+        type: number
+        description: SectorSize is the amount of space in each sector committed to the network by this miner.
+      dePledgedCollateral:
+        type: number
+        description: Collateral that is waiting to be withdrawn
+      dePledgeTime: 
+        type: number
+        description: Time at which the depledged collateral may be withdrawn
+      sectors: 
+        type: array
+        items: 
+          $ref: 'filecoin-rest-api.yml#/components/schemas/Sector'
+      provingSet:
+        type: array
+        items: 
+          $ref: 'filecoin-rest-api.yml#/components/schemas/Sector'
+      currentFaultSet:
+        type: string
+      nextFaultSet:
+        type: string
+      nextDoneSet:
+        type: string
+      arbitratedDeals:
+        type: string
+      power:
+        type: number
+      slashedSet:
+        type: array
+        items: 
+          $ref: 'filecoin-rest-api.yml#/components/schemas/Sector'
+      slashedAt:
+        type: number
+      ownedStorageCollateral:
+        type: number
+      provingPeriodEnd:
+        type: number
+  PaymentBrokerActorState:
+    $ref: '#/models/EmptyActorState'
+  StorageMarketActorState:
+    type: object
+    properties:
+      totalStorage: 
+        type: number
+        description: Filecoin's total committed storage as of the current block.
+endpoints:
+  actors_collection:
+    get:
+      operationId: listActors
+      summary: List Actors
+      description: List Actors currently known to this node in ID order
+      tags:
+        - Actors
+      parameters:
+      - name: nextPageToken
+        in: query
+        description: Next page token
+        required: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/models/Actor'
+  actor_resource:
+    get:
+      operationId: getActorById
+      summary: Find Actor by ID
+      description: Return information about the Actor with the specified ID
+      tags:
+        - Actors
+      parameters: 
+      - name: actorId
+        in: path
+        description: ID of the Actor to fetch
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/models/Actor'
