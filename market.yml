@@ -4,7 +4,7 @@ models:
     properties:
       id:
         type: string
-        description: The ID of this Ask
+        description: The ID of this Ask.
         readOnly: true
       kind:
         type: string
@@ -12,15 +12,15 @@ models:
       minerId:
         type: string
         readOnly: true
-        description: The ID of the miner that published this Ask
+        description: The ID (address) of the miner Actor that published this Ask.
         example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
       price:
         type: number
-        description: The price in FIL per byte per blocktime
+        description: The price in FIL per byte per blocktime being proposed in this Ask.
         example: 0.00000000001
       expiry:
         type: number
-        description: The block height at which this ask expires
+        description: The block height at which this Ask expires.
         example: 392265
   Deal:
     type: object
