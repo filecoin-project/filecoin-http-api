@@ -93,7 +93,17 @@ info:
     email: erik.ingenito@protocol.ai
 servers:
 - url: http://127.0.0.1:3453/api/chain/v0
+security:
+  - bearerToken: []
 components:
+  securitySchemes:
+    bearerToken :
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
   schemas:
     Actor: 
       $ref: 'actors.yml#/models/Actor'

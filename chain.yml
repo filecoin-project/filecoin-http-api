@@ -140,6 +140,8 @@ endpoints:
             application/json:
               schema:
                 $ref: '#/models/Block'
+        401:
+          $ref: 'api.yml#/components/responses/UnauthorizedError'
   executed_message_resource:
     get:
       operationId: getExecutedMessageById
@@ -161,6 +163,8 @@ endpoints:
             application/json:
               schema:
                 $ref: '#/models/ExecutedMessage'
+        401:
+          $ref: 'api.yml#/components/responses/UnauthorizedError'
   message_resource:
     get:
       operationId: getMessageById
@@ -182,6 +186,8 @@ endpoints:
             application/json:
               schema:
                 $ref: '#/models/Message'
+        401:
+          $ref: 'api.yml#/components/responses/UnauthorizedError'
   messages_collection:
     post:
       operationId: createMessage
@@ -201,6 +207,8 @@ endpoints:
             application/json:
               schema:
                 $ref: '#/models/Message'
+        401:
+          $ref: 'api.yml#/components/responses/UnauthorizedError'
   tipset_resource:
     get:
       operationId: getTipsetById
@@ -222,6 +230,8 @@ endpoints:
             application/json:
               schema:
                 $ref: '#/models/Tipset'
+        401:
+          $ref: 'api.yml#/components/responses/UnauthorizedError'
   tipsets_collection:
     get:
       operationId: listTipsets
@@ -245,3 +255,5 @@ endpoints:
                 type: array
                 items:
                   $ref: '#/models/Tipset'
+        401:
+          $ref: 'api.yml#/components/responses/UnauthorizedError'
