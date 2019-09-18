@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "scripts": {
     "serve": "redoc-cli serve api/api.yml -p 5000 -w",
-    "html": "redoc-cli bundle api/api.yml -o html/filecoin-http-api.html --title 'Filecoin REST API'",
+    "html": "redoc-cli bundle api/api.yml -o docs/index.html --title 'Filecoin REST API'",
     "lint": "speccy lint api/api.yml"
   },
   "dependencies": {
