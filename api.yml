@@ -13,10 +13,12 @@ tags:
   - name: BlockHeaderModel
     x-displayName: BlockHeader
     description: |
+      A BlockHeader contains information relating to a Block. In the Filecoin specification there is no difference between a BlockHeader and a Block, but for the purposees of this API a Block wraps a BlockHeader and additionally contains the full contents of all messages included in that Block.
       <SchemaDefinition schemaRef="#/components/schemas/BlockHeader"/>
   - name: BlockModel
     x-displayName: Block
     description: |
+      A Block contains information relevant to a particular point in time over which the network may achieve consensus. Blocks are mined as part of the consensus mechanism by elected miners and then included in a Tipset.
       <SchemaDefinition schemaRef="#/components/schemas/Block"/>
   - name: Blocks
   - name: ChannelModel
