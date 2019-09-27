@@ -11,7 +11,7 @@ models:
         description: The identifier that refers to an Actor in the Filecoin state. All Actors have an address. To learn more, take a look at the [address spec.](https://github.com/filecoin-project/specs/blob/master/address.md).
       role:
         type: string
-        enum: [init,account,miner,storageMarket,paymentBroker]
+        enum: [Init,Account,StorageMiner,StorageMarket,PaymentChannel,MultisigAccount]
       nonce:
         type: number
         description: Nonce is the nonce expected on the next message from this actor. Messages are processed in strict, contiguous nonce order. 
@@ -25,8 +25,8 @@ models:
           oneOf: 
             - $ref: '#/models/AccountActorState'
             - $ref: '#/models/InitActorState'
-            - $ref: '#/models/MinerActorState'
-            - $ref: '#/models/PaymentBrokerActorState'
+            - $ref: '#/models/PaymentChannelActorState'
+            - $ref: '#/models/StorageMinerActorState'
             - $ref: '#/models/StorageMarketActorState'
   AccountActorState:
     $ref: '#/models/EmptyActorState'
@@ -39,7 +39,15 @@ models:
       nextId: 
         type: number
         description: The next numerical ID to allocate to a newly instantiated Actor
-  MinerActorState:
+  PaymentChannelActorState:
+    $ref: '#/models/EmptyActorState'
+  StorageMarketActorState:
+    type: object
+    properties:
+      totalStorage:
+        type: number
+        description: Filecoin's total committed storage as of the current block.
+  StorageMinerActorState:
     type: object
     properties: 
       owner:
@@ -88,8 +96,6 @@ models:
         type: number
       provingPeriodEnd:
         type: number
-  PaymentBrokerActorState:
-    $ref: '#/models/EmptyActorState'
   Sector:
     type: object
     properties:
@@ -97,12 +103,6 @@ models:
         type: string
       commR:
         type: string
-  StorageMarketActorState:
-    type: object
-    properties:
-      totalStorage: 
-        type: number
-        description: Filecoin's total committed storage as of the current block.
 endpoints:
   actors_collection:
     get:
