@@ -18,9 +18,9 @@ models:
       balance:
         type: number
         description: Balance is the amount of FIL in the actor's account.
-      stateRoot:
+      head:
         type: string
-        description: The CID of the root of the actor's state tree.
+        description: The CID ([Content Identifier](https://github.com/ipld/cid)) of the root of the Actor's state tree.
       info: 
           oneOf: 
             - $ref: '#/models/AccountActorState'
