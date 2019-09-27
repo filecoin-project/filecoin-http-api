@@ -22,25 +22,25 @@ models:
         type: number
         description: The block height at which this Ask expires.
         example: 392265
-  Deal:
+  StorageDeal:
     type: object
     properties:
       id:
         type: string
-        description: The ID of this Deal
+        description: The ID of this StorageDeal
         readOnly: true
       kind:
         type: string
         readOnly: true
-        enum: [deal]
+        enum: [storageDeal]
       minerActorId:
         type: string
-        description: The ID of the storage miner that is fulfilling this Deal
+        description: The ID of the storage miner that is fulfilling this StorageDeal
         example: t2ytzk7whxrjb77kg4wd5fqy2cfse5jxajkqczfcq
       clientActorId:
         type: string
         readOnly: true
-        description: The ID of the client initiating the storage Deal (will typically be the owner of the current node)
+        description: The ID of the client initiating the StorageDeal (will typically be the owner of the current node)
         example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
       pieceId:
         type: string
@@ -54,7 +54,7 @@ models:
       askId:
         type: string
         writeOnly: true
-        description: The ID of the Ask from the target miner for which this Deal is to be proposed
+        description: The ID of the Ask from the target miner for which this StorageDeal is to be proposed
         example: 0
       totalPrice:
         type: number
@@ -63,11 +63,11 @@ models:
         example: 0.19296864
       duration:
         type: number
-        description: The duration of this storage Deal in blocks
+        description: The duration of this StorageDeal in blocks
         example: 288000
       status:
         type: string
-        description: The current status of the Deal
+        description: The current status of the StorageDeal
         enum: [unknown,rejected,accepted,started,failed,staged,sealing,complete]
         example: complete
       paymentInfo:
@@ -76,13 +76,13 @@ models:
         properties:
           payerClientActorId:
             type: string
-            description: The address of the owner of the payment Channel
-          channelId:
+            description: The address of the owner of the PaymentChannel
+          paymentChannelId:
             type: string
-            description: The ID of the payment Channel the client will use to pay the miner. It must already exist and have sufficient funds locked up in order to create a storage deal.
-          channelMessageId:
+            description: The ID of the PaymentChannel the client will use to pay the miner. It must already exist and have sufficient funds locked up in order to create a StorageDeal.
+          paymentChannelMessageId:
             type: string
-            description:  The ID of the Message used to create the Channel (so the miner can wait for it).
+            description:  The ID of the Message used to create the PaymentChannel (so the miner can wait for it).
 endpoints:
   asks_collection:
     get:
@@ -160,13 +160,13 @@ endpoints:
             application/json:
               schema:
                 $ref: '#/models/Ask'
-  deals_collection:
+  storage_deals_collection:
     get:
-      operationId: getDeals
-      summary: Fetch Deal information known to this node
+      operationId: getStorageDeals
+      summary: Fetch StorageDeal information known to this node
       description: This endpoint returns a list of all deals known to the current node.
       tags:
-        - Deals
+        - StorageDeals
       parameters:
         - name: minerId
           in: query
@@ -203,18 +203,18 @@ endpoints:
               schema:
                 type: array
                 items:
-                  $ref: '#/models/Deal'
+                  $ref: '#/models/StorageDeal'
     post:
-      operationId: createDeal
-      summary: Initiate a storage deal
-      description: This endpoint initiates a storage deal with a storage miner. It will create an appropriate payment Channel and vouchers, and pass the deal to the target storage miner to await acceptance or rejection.
+      operationId: createStorageDeal
+      summary: Initiate a StorageDeal
+      description: This endpoint initiates a storage deal with a storage miner. It will create an appropriate PaymentChannel and vouchers, and pass the deal to the target storage miner to await acceptance or rejection.
       tags:
-        - Deals
+        - StorageDeals
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/models/Deal'
+              $ref: '#/models/StorageDeal'
       responses:
         200:
           description: Success
@@ -223,4 +223,4 @@ endpoints:
               schema:
                 type: array
                 items:
-                  $ref: '#/models/Deal'
+                  $ref: '#/models/StorageDeal'

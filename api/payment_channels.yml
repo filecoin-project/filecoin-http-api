@@ -6,9 +6,9 @@ models:
         type: string
         readOnly: true
         enum: [voucher]
-      channelId:
+      paymentChannelId:
         type: string
-        description: The ID of the payment Channel this Voucher is redeemable against. 
+        description: The ID of the PaymentChannel this Voucher is redeemable against.
         readOnly: true
         example: TODO
       payer:
@@ -37,24 +37,24 @@ models:
         type: string
         description: The signature over all the data in this Voucher
         example: TODO
-  Channel:
+  PaymentChannel:
     type: object
     properties:
       id:
         type: string
-        description: The ID of this Channel
+        description: The ID of this PaymentChannel
         readOnly: true
       kind:
         type: string
         readOnly: true
-        enum: [channel]
+        enum: [paymentChannel]
       targetActorId:
         type: string
-        description: The address of the account to which funds will be transferred by this Channel upon successful redemption of vouchers
+        description: The address of the account to which funds will be transferred by this PaymentChannel upon successful redemption of vouchers
         example: t17vmiuyzqa3ygd4gsj5rsgglbj737wyztb4cohfy
       amount:
         type: number
-        description: The total amount of FIL that is in this Channel and payable to the target
+        description: The total amount of FIL that is in this PaymentChannel and payable to the target
         example: 0.19296864
       amountRedeemed:
         type: number
@@ -63,12 +63,12 @@ models:
         example: 0
       agreedEol:
         type: number
-        description: The original chain height at which this Channel will expire. Specified upon creation and optionally extended by the creator of the channel.
+        description: The original chain height at which this PaymentChannel will expire. Specified upon creation and optionally extended by the creator of the channel.
         example: 2120399
       actualEol:
         type: number
         readOnly: true
-        description: The actual expiration for the payment Channel which can differ from agreedEol when the payment channel is in dispute 
+        description: The actual expiration for the payment PaymentChannel which can differ from agreedEol when the payment channel is in dispute
       condition: 
         type: object
         readOnly: true
@@ -77,16 +77,16 @@ models:
       redeemed:
         type: boolean
         readOnly: true
-        description: A flag indicated whether or not Redeem has been called on the payment Channel yet. This is necessary because AmountRedeemed can still be zero in the event of a zero-value voucher
+        description: A flag indicated whether or not Redeem has been called on the payment PaymentChannel yet. This is necessary because AmountRedeemed can still be zero in the event of a zero-value voucher
         example: true
 endpoints:
-  channels_collection:
+  payment_channels_collection:
     get:
-      operationId: listChannels
-      summary: List Channels
-      description: List all payment channels known to this node
+      operationId: listPaymentChannels
+      summary: List Payment Channels
+      description: List all PaymentChannels known to this node
       tags:
-        - Channels
+        - PaymentChannels
       parameters:
       - name: nextPageToken
         in: query
@@ -102,18 +102,18 @@ endpoints:
               schema:
                 type: array
                 items:
-                  $ref: '#/models/Channel'
+                  $ref: '#/models/PaymentChannel'
     post: 
-      operationId: createChannel
-      summary: Create new payment Channel
-      description: This endpoint creates a new payment Channel with the specified characteristics
+      operationId: createPaymentChannel
+      summary: Create new PaymentChannel
+      description: This endpoint creates a new PaymentChannel with the specified characteristics
       tags:
         - Channels
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/models/Channel'
+              $ref: '#/models/PaymentChannel'
       responses:
         200:
           description: Success
@@ -122,18 +122,18 @@ endpoints:
               schema:
                 type: array
                 items:
-                  $ref: '#/models/Channel'
-  channel_resource:
+                  $ref: '#/models/PaymentChannel'
+  payment_channel_resource:
     get:
-      operationId: getChannelById
-      summary: Find Channel by ID
-      description: Find a payment Channel by ID and return it
+      operationId: getPaymentChannelById
+      summary: Find PaymentChannel by ID
+      description: Find a PaymentChannel by ID and return it
       tags:
-        - Channels
+        - PaymentChannels
       parameters: 
-      - name: channelId
+      - name: paymentChannelId
         in: path
-        description: ID of the Channel to fetch
+        description: ID of the PaymentChannel to fetch
         required: true
         schema:
           type: string
@@ -143,17 +143,17 @@ endpoints:
           content:
             application/json:
               schema:
-                $ref: '#/models/Channel'
+                $ref: '#/models/PaymentChannel'
     patch:
-      operationId: extendChannelById
-      summary: Extend duration of Channel
-      description: This endpoint extends the duration of an existing payment Channel, increasing the block height at which the Channel will timeout. Only the payer (creator) or the channel can successfully call this endpoint. 
+      operationId: extendPaymentChannelById
+      summary: Extend duration of PaymentChannel
+      description: This endpoint extends the duration of an existing PaymentChannel, increasing the block height at which the PaymentChannel will timeout. Only the payer (creator) or the PaymentChannel can successfully call this endpoint.
       tags:
-        - Channels
+        - PaymentChannels
       parameters: 
-      - name: channelId
+      - name: paymentChannelId
         in: path
-        description: ID of the Channel to fetch
+        description: ID of the PaymentChannel to fetch
         required: true
         schema:
           type: string
@@ -165,7 +165,7 @@ endpoints:
               properties:
                 agreedEol:
                   type: number
-                  description: The new chain (increased) height at which this channel will expire.
+                  description: The new chain (increased) height at which this PaymentChannel will expire.
                   example: 2120399
       responses:
         200:
@@ -173,31 +173,31 @@ endpoints:
           content:
             application/json:
               schema:
-                $ref: '#/models/Channel'
-  channel_resource_close:
+                $ref: '#/models/PaymentChannel'
+  payment_channel_resource_close:
     post:
-      operationId: closeChannel
-      summary: Close Channel
-      description: This endpoint closes the specified payment Channel and returns all unredeemed funds to the payee (the Channel's creator). Upon completion this Channel is effectively deleted and can never be used again. This method can only be called by target of the Channel with a valid voucher - any other invocation is an error.
+      operationId: closePaymentChannel
+      summary: Close PaymentChannel
+      description: This endpoint closes the specified PaymentChannel and returns all unredeemed funds to the payee (the PaymentChannel's creator). Upon completion this PaymentChannel is effectively deleted and can never be used again. This method can only be called by target of the PaymentChannel with a valid voucher - any other invocation is an error.
       tags:
-        - Channels
+        - PaymentChannel
       parameters: 
-      - name: channelId
+      - name: paymentChannel
         in: path
-        description: ID of the Channel to fetch
+        description: ID of the PaymentChannel to fetch
         required: true
         schema:
           type: string
       responses:
         200:
           description: Success
-  channel_resource_cancel:
+  payment_channel_resource_cancel:
     post:
       operationId: cancelChannel
-      summary: Schedule Channel for cancellation
-      description: This endpoint reduces the actual eol (effective end date) of the Channel in an attempt to free up the funds in the channel for earlier reclaming. This endpoint can only successfullly be called by the Channel's payer as the cancel message needs to originate from that account. Cancel doesn't immediately close a channel but instead reduces the lifetime of the channel leaving a grace period during which the payee can undo the cancellation by submitting a valid voucher, thereby proving that the channel is still in use.
+      summary: Schedule PaymentChannel for cancellation
+      description: This endpoint reduces the actual eol (effective end date) of the PaymentChannel in an attempt to free up the funds in the channel for earlier reclaming. This endpoint can only successfullly be called by the PaymentChannel's payer as the cancel message needs to originate from that account. Cancel doesn't immediately close a channel but instead reduces the lifetime of the channel leaving a grace period during which the payee can undo the cancellation by submitting a valid voucher, thereby proving that the channel is still in use.
       tags:
-        - Channels
+        - PaymentChannels
       parameters: 
       - name: channelId
         in: path
@@ -208,15 +208,15 @@ endpoints:
       responses:
         200:
           description: Success
-  channel_resource_reclaim:
+  payment_channel_resource_reclaim:
     post:
       operationId: reclaimChannel
       summary: Reclaim unspent funds in Channel
-      description: This endpoint is used by the creator (payer) of a Channel to reclaim unspent funds when a Channel has timed out (the chain height has exceeded the eol of the Channel). It can only successfully be called by the Channel's payer on a timed out Channel.
+      description: This endpoint is used by the creator (payer) of a PaymentChannel to reclaim unspent funds when a PaymentChannel has timed out (the chain height has exceeded the eol of the PaymentChannel). It can only successfully be called by the PaymentChannel's payer on a timed out PaymentChannel.
       tags:
-        - Channels
+        - PaymentChannels
       parameters: 
-      - name: channelId
+      - name: paymentChannelId
         in: path
         description: ID of the Channel to reclaim
         required: true
@@ -225,17 +225,17 @@ endpoints:
       responses:
         200:
           description: Success
-  channel_resource_redeem:
+  payment_channel_resource_redeem:
     post:
       operationId: redeemVoucher
       summary: Redeem Voucher
-      description: This endpoint accepts a voucher from the Channel target and redeems it. Upon checking the validity and successfully checking the voucher's condition the specified funds will be transfered from the channel to the target. 
+      description: This endpoint accepts a voucher from the PaymentChannel target and redeems it. Upon checking the validity and successfully checking the voucher's condition the specified funds will be transfered from the channel to the target.
       tags:
-        - Channels
+        - PaymentChannels
       parameters: 
-      - name: channelId
+      - name: paymentChannelId
         in: path
-        description: ID of the Channel to fetch
+        description: ID of the PaymentChannel to fetch
         required: true
         schema:
           type: string
@@ -247,17 +247,17 @@ endpoints:
       responses:
         200:
           description: Success
-  channel_resource_vouchers:
+  payment_channel_resource_vouchers:
     post:
       operationId: createVoucher
       summary: Creates Voucher
-      description: This endpoint accepts voucher details and returns a new signed voucher suitable for off chain transmission to the Channel target for later redemption. Only the Channel payer (creator) can call this endpoint successfully. 
+      description: This endpoint accepts voucher details and returns a new signed voucher suitable for off chain transmission to the PaymentChannel target for later redemption. Only the PaymentChannel payer (creator) can call this endpoint successfully.
       tags:
-        - Channels
+        - PaymentChannels
       parameters: 
-      - name: channelId
+      - name: paymentChannelId
         in: path
-        description: ID of the Channel to fetch
+        description: ID of the PaymentChannel to fetch
         required: true
         schema:
           type: string

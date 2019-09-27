@@ -35,11 +35,11 @@ models:
         type: string
         description: The address of the miner Actor that mined this block.
         example: t2usk2yzfu23uq2wyuc3w6ov233nxyhkysju2suba
-      messagesCID:
+      messagesCid:
         type: string
         description: The CID ([Content Identifier](https://github.com/ipld/cid)) of the of bls and secpk signed trees of Messages included in this Block.
         example: bafy2bzacebc3bt6cedhoyw34drrmjvazhu4oj25er2ebk4u445pzycvq4ta4a
-      recieptsCID:
+      recieptsCid:
         type: string
         description: The CID ([Content Identifier](https://github.com/ipld/cid)) of the of tree containing receipts for the messages included in this block. Receipts are the return values and errors codes resulting from messages.
         example: bafy2bzacebc3bt6cedhoyw34drrmjvazhu4oj25er2ebk4u445pzycvq4ta4a

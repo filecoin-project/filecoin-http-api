@@ -3,7 +3,9 @@ tags:
   - name: ActorModel
     x-displayName: Actor
     description: |
-      Actor is the central abstraction of entities in the system. See the [Actor Specification](https://github.com/filecoin-project/specs/blob/master/data-structures.md#actor) for more information.
+      Actor is the central abstraction of entities in the system.
+
+      See the [Actor Specification](https://github.com/filecoin-project/specs/blob/master/data-structures.md#actor) and the [Actor Definition](https://github.com/filecoin-project/specs/blob/master/definitions.md#actor) for more information.
 
       Both individual accounts, as well as contracts (user & system level) are represented as actors. An actor has the following core functionality implemented on a system level:
       - track a Filecoin balance, using the `Balance` field
@@ -19,26 +21,33 @@ tags:
   - name: AskModel
     x-displayName: Ask
     description: |
+      An Ask is a price advertisement by a storage miner for storing data.
       <SchemaDefinition schemaRef="#/components/schemas/Ask"/>
   - name: BlockHeaderModel
     x-displayName: BlockHeader
     description: |
       A BlockHeader contains information relating to a Block. In the Filecoin specification there is no difference between a BlockHeader and a Block, but for the purposees of this API a Block wraps a BlockHeader and additionally contains the full contents of all messages included in that Block.
+
+      See the [BlockHeader Specificiation](https://github.com/filecoin-project/specs/blob/master/data-structures.md#block) for more information.
+
       <SchemaDefinition schemaRef="#/components/schemas/BlockHeader"/>
   - name: BlockModel
     x-displayName: Block
     description: |
       A Block contains information relevant to a particular point in time over which the network may achieve consensus. Blocks are mined as part of the consensus mechanism by elected miners and then included in a Tipset.
+
+      See the [BlockHeader Specificiation](https://github.com/filecoin-project/specs/blob/master/data-structures.md#block) for more information.
+
       <SchemaDefinition schemaRef="#/components/schemas/Block"/>
   - name: Blocks
-  - name: ChannelModel
-    x-displayName: Channel
+  - name: PaymentChannelModel
+    x-displayName: PaymentChannel
     description: |
-      <SchemaDefinition schemaRef="#/components/schemas/Channel"/>
-  - name: DealModel
-    x-displayName: Deal
-    description: |
-      <SchemaDefinition schemaRef="#/components/schemas/Deal"/>
+      A PaymentChannel is setup between actors in the Filecoin system to enable off-chain payments with on-chain guarantees, making settlement more efficient.
+
+      See the [Payment Channel Actor Description](https://github.com/filecoin-project/specs/blob/master/actors.md#payment-channel-actor) for more information.
+
+      <SchemaDefinition schemaRef="#/components/schemas/PaymentChannel"/>
   - name: ExecutedMessageModel
     x-displayName: ExecutedMessage
     description: |
@@ -46,6 +55,10 @@ tags:
   - name: MessageModel
     x-displayName: Message
     description: |
+      A Message is an exchange of information between two actors modeled as a function call. Messages are the equivalent of transactions in Ethereum.
+
+      See the [Message Specification](https://github.com/filecoin-project/specs/blob/master/data-structures.md#message) for more information.
+
       <SchemaDefinition schemaRef="#/components/schemas/Message"/>
   - name: Messages
   - name: Node
@@ -53,9 +66,21 @@ tags:
     x-displayName: Node
     description: |
       <SchemaDefinition schemaRef="#/components/schemas/Node"/>
+  - name: StorageDealModel
+    x-displayName: StorageDeal
+    description: |
+      A StorageDeal represents the agreement between between two Actors; one Actor paying the other (via a PaymentChannel) to store data on their behalf.
+
+      See a description of how StorageDeals work in the [Filecoin Storage Market Specification](https://github.com/filecoin-project/specs/blob/master/storage-market.md)
+
+      <SchemaDefinition schemaRef="#/components/schemas/StorageDeal"/>
   - name: TipsetModel
     x-displayName: Tipset
     description: |
+      A TipSet is a set of blocks that have the same parent set and same number of tickets, which implies they will have been mined at the same height. A TipSet can contain multiple blocks if more than one miner successfully mines a block at the same height as another miner.
+
+      See the [Tipset Specification](https://github.com/filecoin-project/specs/blob/master/data-structures.md#tipset) and the [Tipset Description] in the consensus specification for more information
+
       <SchemaDefinition schemaRef="#/components/schemas/Tipset"/>
   - name: Tipsets
   - name: VoucherModel
@@ -71,9 +96,9 @@ x-tagGroups:
   - name: Actor Endpoints
     tags:
       - Actors
-  - name: Channel Endpoints
+  - name: Payment Channel Endpoints
     tags:
-      - Channels
+      - PaymentChannels
   - name: Node Control Endpoints
     tags:
       - Node
@@ -82,15 +107,15 @@ x-tagGroups:
   - name: Storage Market Endpoints
     tags:
       - Asks
-      - Deals
+      - StorageDeals
   - name: Models
     tags:
       - ActorModel
       - AskModel
       - BlockModel
       - BlockHeaderModel
-      - ChannelModel
-      - DealModel
+      - PaymentChannelModel
+      - StorageDealModel
       - ExecutedMessageModel
       - MessageModel
       - NodeModel
@@ -137,10 +162,10 @@ components:
       $ref: 'chain.yml#/models/Block'
     BlockHeader:
       $ref: 'chain.yml#/models/BlockHeader'
-    Channel:
-      $ref: 'channels.yml#/models/Channel'
-    Deal:
-      $ref: 'market.yml#/models/Deal'
+    PaymentChannel:
+      $ref: 'payment_channels.yml#/models/PaymentChannel'
+    StorageDeal:
+      $ref: 'market.yml#/models/StorageDeal'
     ExecutedMessage:
       $ref: 'chain.yml#/models/ExecutedMessage'
     Message:
@@ -154,7 +179,7 @@ components:
     Tipset:
       $ref: 'chain.yml#/models/Tipset'
     Voucher:
-      $ref: 'channels.yml#/models/Voucher'
+      $ref: 'payment_channels.yml#/models/Voucher'
     Sector:
       $ref: 'actors.yml#/models/Sector'
 paths:
@@ -180,23 +205,23 @@ paths:
     $ref: './control.yml#/endpoints/pieces_collection'
   /control/pieces/{pieceId}:
     $ref: './control.yml#/endpoints/piece_resource'
-  /actors/channels/{channelId}/redeem:
-    $ref: 'channels.yml#/endpoints/channel_resource_redeem'
-  /actors/channels/{channelId}/vouchers:
-    $ref: 'channels.yml#/endpoints/channel_resource_vouchers'
-  /channels:
-    $ref: 'channels.yml#/endpoints/channels_collection'
-  /channels/{channelId}: # Right now it's not possible to look up Channels by ID alone, only by Payee/ID, channel ID could just be a concatenation
-    $ref: 'channels.yml#/endpoints/channel_resource'
-  /channels/{channelId}/close:
-    $ref: 'channels.yml#/endpoints/channel_resource_close'
-  /channels/{channelId}/cancel:
-    $ref: 'channels.yml#/endpoints/channel_resource_cancel'
-  /channels/{channelId}/reclaim:
-    $ref: 'channels.yml#/endpoints/channel_resource_reclaim'
+  /payment_channels/{paymentChannelId}/redeem:
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource_redeem'
+  /payment_channels/{paymentChannelId}/vouchers:
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource_vouchers'
+  /payment_channels:
+    $ref: 'payment_channels.yml#/endpoints/payment_channels_collection'
+  /payment_channels/{paymentChannelId}: # Right now it's not possible to look up Channels by ID alone, only by Payee/ID, channel ID could just be a concatenation
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource'
+  /payment_channels/{paymentChannelId}/close:
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource_close'
+  /payment_channels/{paymentChannelId}/cancel:
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource_cancel'
+  /payment_channels/{paymentChannelId}/reclaim:
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource_reclaim'
   /market/asks:
     $ref: 'market.yml#/endpoints/asks_collection'
   /market/asks/{askId}:
     $ref: 'market.yml#/endpoints/ask_resource'
-  /market/deals:
-    $ref: 'market.yml#/endpoints/deals_collection'
+  /market/storage_deals:
+    $ref: 'market.yml#/endpoints/storage_deals_collection'
