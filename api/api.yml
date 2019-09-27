@@ -3,7 +3,17 @@ tags:
   - name: ActorModel
     x-displayName: Actor
     description: |
-      This is a description
+      Actor is the central abstraction of entities in the system. See the [Actor Specification](https://github.com/filecoin-project/specs/blob/master/data-structures.md#actor) for more information.
+
+      Both individual accounts, as well as contracts (user & system level) are represented as actors. An actor has the following core functionality implemented on a system level:
+      - track a Filecoin balance, using the `Balance` field
+      - execute code stored in the `Code` field
+      - read & write memory
+      - replay protection, using the `Nonce` field
+
+      Value sent to a non-existent address will be tracked as an empty actor that has a Balance but nil Code and Memory. You must nil check Code cids before comparing them.
+
+      More specific capabilities for individual accounts or contract specific must be implemented inside the code.
       <SchemaDefinition schemaRef="#/components/schemas/Actor"/>
   - name: Actors
   - name: AskModel
