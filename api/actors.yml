@@ -6,8 +6,9 @@ models:
         type: string
         readOnly: true
         enum: [actor]
-      id: 
+      address:
         type: string
+        description: The identifier that refers to an Actor in the Filecoin state. All Actors have an address. To learn more, take a look at the [address spec.](https://github.com/filecoin-project/specs/blob/master/address.md).
       role:
         type: string
         enum: [init,account,miner,storageMarket,paymentBroker]
@@ -107,7 +108,7 @@ endpoints:
     get:
       operationId: listActors
       summary: List Actors
-      description: List Actors currently known to this node in ID order
+      description: List Actors currently known to this node in address order
       tags:
         - Actors
       parameters:
@@ -128,15 +129,15 @@ endpoints:
                   $ref: '#/models/Actor'
   actor_resource:
     get:
-      operationId: getActorById
+      operationId: getActorByAddress
       summary: Find Actor by ID
       description: Return information about the Actor with the specified ID
       tags:
         - Actors
       parameters: 
-      - name: actorId
+      - name: address
         in: path
-        description: ID of the Actor to fetch
+        description: The address of the Actor to fetch
         required: true
         schema:
           type: string
