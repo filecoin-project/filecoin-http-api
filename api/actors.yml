@@ -133,8 +133,8 @@ endpoints:
   actor_resource:
     get:
       operationId: getActorByAddress
-      summary: Find Actor by ID
-      description: Return information about the Actor with the specified ID
+      summary: Find Actor by Address
+      description: Return information about the Actor with the specified Address
       tags:
         - Actors
       parameters: 

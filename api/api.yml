@@ -40,14 +40,6 @@ tags:
 
       <SchemaDefinition schemaRef="#/components/schemas/Block"/>
   - name: Blocks
-  - name: PaymentChannelModel
-    x-displayName: PaymentChannel
-    description: |
-      A PaymentChannel is setup between actors in the Filecoin system to enable off-chain payments with on-chain guarantees, making settlement more efficient.
-
-      See the [Payment Channel Actor Description](https://github.com/filecoin-project/specs/blob/master/actors.md#payment-channel-actor) for more information.
-
-      <SchemaDefinition schemaRef="#/components/schemas/PaymentChannel"/>
   - name: ExecutedMessageModel
     x-displayName: ExecutedMessage
     description: |
@@ -66,6 +58,14 @@ tags:
     x-displayName: Node
     description: |
       <SchemaDefinition schemaRef="#/components/schemas/Node"/>
+  - name: PaymentChannelModel
+    x-displayName: PaymentChannel
+    description: |
+      A PaymentChannel is setup between actors in the Filecoin system to enable off-chain payments with on-chain guarantees, making settlement more efficient.
+
+      See the [Payment Channel Actor Description](https://github.com/filecoin-project/specs/blob/master/actors.md#payment-channel-actor) for more information.
+
+      <SchemaDefinition schemaRef="#/components/schemas/PaymentChannel"/>
   - name: StorageDealModel
     x-displayName: StorageDeal
     description: |
@@ -114,11 +114,11 @@ x-tagGroups:
       - AskModel
       - BlockModel
       - BlockHeaderModel
-      - PaymentChannelModel
-      - StorageDealModel
       - ExecutedMessageModel
       - MessageModel
       - NodeModel
+      - PaymentChannelModel
+      - StorageDealModel
       - TipsetModel
       - VoucherModel
 info:
@@ -131,10 +131,10 @@ info:
 servers:
 - url: http://127.0.0.1:3453/api/chain/v0
 security:
-  - 'Bearer Token Authentication': []
+  - BearerTokenAuth: []
 components:
   securitySchemes:
-    'Bearer Token Authentication':
+    BearerTokenAuth:
       type: http
       scheme: Bearer Token
       description: |
@@ -185,7 +185,7 @@ components:
 paths:
   /actors:
     $ref: './actors.yml#/endpoints/actors_collection'
-  /actors/{actorId}:
+  /actors/{address}:
     $ref: './actors.yml#/endpoints/actor_resource'
   /chain/tipsets:
     $ref: './chain.yml#/endpoints/tipsets_collection'

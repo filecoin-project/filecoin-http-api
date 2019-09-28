@@ -108,7 +108,7 @@ endpoints:
       summary: Create new PaymentChannel
       description: This endpoint creates a new PaymentChannel with the specified characteristics
       tags:
-        - Channels
+        - PaymentChannels
       requestBody:
         content:
           application/json:
@@ -182,7 +182,7 @@ endpoints:
       tags:
         - PaymentChannel
       parameters: 
-      - name: paymentChannel
+      - name: paymentChannelId
         in: path
         description: ID of the PaymentChannel to fetch
         required: true
@@ -199,7 +199,7 @@ endpoints:
       tags:
         - PaymentChannels
       parameters: 
-      - name: channelId
+      - name: paymentChannelId
         in: path
         description: ID of the Channel to cancel
         required: true
