@@ -1,0 +1,227 @@
+openapi: 3.0.2
+tags:
+  - name: ActorModel
+    x-displayName: Actor
+    description: |
+      Actor is the central abstraction of entities in the system.
+
+      See the [Actor Specification](https://github.com/filecoin-project/specs/blob/master/data-structures.md#actor) and the [Actor Definition](https://github.com/filecoin-project/specs/blob/master/definitions.md#actor) for more information.
+
+      Both individual accounts, as well as contracts (user & system level) are represented as actors. An actor has the following core functionality implemented on a system level:
+      - track a Filecoin balance, using the `Balance` field
+      - execute code stored in the `Code` field
+      - read & write memory
+      - replay protection, using the `Nonce` field
+
+      Value sent to a non-existent address will be tracked as an empty actor that has a Balance but nil Code and Memory. You must nil check Code cids before comparing them.
+
+      More specific capabilities for individual accounts or contract specific must be implemented inside the code.
+      <SchemaDefinition schemaRef="#/components/schemas/Actor"/>
+  - name: Actors
+  - name: AskModel
+    x-displayName: Ask
+    description: |
+      An Ask is a price advertisement by a storage miner for storing data.
+      <SchemaDefinition schemaRef="#/components/schemas/Ask"/>
+  - name: BlockHeaderModel
+    x-displayName: BlockHeader
+    description: |
+      A BlockHeader contains information relating to a Block. In the Filecoin specification there is no difference between a BlockHeader and a Block, but for the purposees of this API a Block wraps a BlockHeader and additionally contains the full contents of all messages included in that Block.
+
+      See the [BlockHeader Specificiation](https://github.com/filecoin-project/specs/blob/master/data-structures.md#block) for more information.
+
+      <SchemaDefinition schemaRef="#/components/schemas/BlockHeader"/>
+  - name: BlockModel
+    x-displayName: Block
+    description: |
+      A Block contains information relevant to a particular point in time over which the network may achieve consensus. Blocks are mined as part of the consensus mechanism by elected miners and then included in a Tipset.
+
+      See the [BlockHeader Specificiation](https://github.com/filecoin-project/specs/blob/master/data-structures.md#block) for more information.
+
+      <SchemaDefinition schemaRef="#/components/schemas/Block"/>
+  - name: Blocks
+  - name: ExecutedMessageModel
+    x-displayName: ExecutedMessage
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/ExecutedMessage"/>
+  - name: MessageModel
+    x-displayName: Message
+    description: |
+      A Message is an exchange of information between two actors modeled as a function call. Messages are the equivalent of transactions in Ethereum.
+
+      See the [Message Specification](https://github.com/filecoin-project/specs/blob/master/data-structures.md#message) for more information.
+
+      <SchemaDefinition schemaRef="#/components/schemas/Message"/>
+  - name: Messages
+  - name: Node
+  - name: NodeModel
+    x-displayName: Node
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Node"/>
+  - name: PaymentChannelModel
+    x-displayName: PaymentChannel
+    description: |
+      A PaymentChannel is setup between actors in the Filecoin system to enable off-chain payments with on-chain guarantees, making settlement more efficient.
+
+      See the [Payment Channel Actor Description](https://github.com/filecoin-project/specs/blob/master/actors.md#payment-channel-actor) for more information.
+
+      <SchemaDefinition schemaRef="#/components/schemas/PaymentChannel"/>
+  - name: StorageDealModel
+    x-displayName: StorageDeal
+    description: |
+      A StorageDeal represents the agreement between between two Actors; one Actor paying the other (via a PaymentChannel) to store data on their behalf.
+
+      See a description of how StorageDeals work in the [Filecoin Storage Market Specification](https://github.com/filecoin-project/specs/blob/master/storage-market.md)
+
+      <SchemaDefinition schemaRef="#/components/schemas/StorageDeal"/>
+  - name: TipsetModel
+    x-displayName: Tipset
+    description: |
+      A TipSet is a set of blocks that have the same parent set and same number of tickets, which implies they will have been mined at the same height. A TipSet can contain multiple blocks if more than one miner successfully mines a block at the same height as another miner.
+
+      See the [Tipset Specification](https://github.com/filecoin-project/specs/blob/master/data-structures.md#tipset) and the [Tipset Description] in the consensus specification for more information
+
+      <SchemaDefinition schemaRef="#/components/schemas/Tipset"/>
+  - name: Tipsets
+  - name: VoucherModel
+    x-displayName: Voucher
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Voucher"/>
+x-tagGroups:
+  - name: Chain Resources
+    tags:
+      - Tipsets
+      - Blocks
+      - Messages
+  - name: Actor Endpoints
+    tags:
+      - Actors
+  - name: Payment Channel Endpoints
+    tags:
+      - PaymentChannels
+  - name: Node Control Endpoints
+    tags:
+      - Node
+      - Address
+      - Pieces
+  - name: Storage Market Endpoints
+    tags:
+      - Asks
+      - StorageDeals
+  - name: Models
+    tags:
+      - ActorModel
+      - AskModel
+      - BlockModel
+      - BlockHeaderModel
+      - ExecutedMessageModel
+      - MessageModel
+      - NodeModel
+      - PaymentChannelModel
+      - StorageDealModel
+      - TipsetModel
+      - VoucherModel
+info:
+  title: Filecoin JSON REST API
+  description: Filecoin JSON REST API Description
+  version: 0.1.0
+  contact: 
+    name: Filecoin JSON REST API SPEC
+    email: erik.ingenito@protocol.ai
+servers:
+- url: http://127.0.0.1:3453/api/chain/v0
+security:
+  - BearerTokenAuth: []
+components:
+  securitySchemes:
+    BearerTokenAuth:
+      type: http
+      scheme: Bearer Token
+      description: |
+        The authentication scheme for this API is implementation dependent. Implementations should feel free to use the scheme and granularity they deem fit. This document describes the scheme used by the [go-filecoin](https://github.com/filecoin-project/go-filecoin) daemon.
+
+        Go-filecoin will initially (v0) support a simple all or nothing authentication and authorization suitable for use by the owner/operator of the current node, and nothing else. Consumers of this API must provide a bearer token included in the Authorization header of each request. This token is provided by the go-filecoin node for use by the caller via some out of band mechanism (like a file created on the filesystem upon initialization or upon startup). More sophisticated authentication and authorization will follow.
+
+        The nature of this style of authentication makes it suitable for use only when served over SSL/TLS.
+
+        Here is an example of using a node provided bearer token and a node provided CA cert used for self-signed TLS with curl. This example assumes the cert and token both reside in the .filecoin folder and where generated by the go-filecoin daemon:
+        ```
+        $ AUTH="Authorization: Bearer $(xxd -ps -u -c 1000 $HOME/.filecoin/api/admin.token)"
+        $ curl -X GET --cacert $HOME/.filecoin/api/tls.cert --header "$AUTH" \
+        > https://localhost:3453/api/filecoin/v0/tipsets
+        ```
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+  schemas:
+    Actor: 
+      $ref: 'actors.yml#/models/Actor'
+    Ask:
+      $ref: 'market.yml#/models/Ask'
+    Block:
+      $ref: 'chain.yml#/models/Block'
+    BlockHeader:
+      $ref: 'chain.yml#/models/BlockHeader'
+    PaymentChannel:
+      $ref: 'payment_channels.yml#/models/PaymentChannel'
+    StorageDeal:
+      $ref: 'market.yml#/models/StorageDeal'
+    ExecutedMessage:
+      $ref: 'chain.yml#/models/ExecutedMessage'
+    Message:
+      $ref: 'chain.yml#/models/Message'
+    Node:
+      $ref: 'control.yml#/models/Node'
+    PeerAddresses:
+      $ref: 'control.yml#/models/PieceMetadata'
+    PieceMetadata:
+      $ref: 'control.yml#/models/PieceMetadata'
+    Tipset:
+      $ref: 'chain.yml#/models/Tipset'
+    Voucher:
+      $ref: 'payment_channels.yml#/models/Voucher'
+    Sector:
+      $ref: 'actors.yml#/models/Sector'
+paths:
+  /actors:
+    $ref: './actors.yml#/endpoints/actors_collection'
+  /actors/{address}:
+    $ref: './actors.yml#/endpoints/actor_resource'
+  /chain/tipsets:
+    $ref: './chain.yml#/endpoints/tipsets_collection'
+  /chain/tipsets/{tipsetId}:
+    $ref: './chain.yml#/endpoints/tipset_resource'
+  /chain/blocks/{blockId}:
+    $ref: './chain.yml#/endpoints/block_resource'
+  /chain/messages:
+    $ref: './chain.yml#/endpoints/messages_collection'
+  /chain/messages/{messageId}:
+    $ref: './chain.yml#/endpoints/message_resource'
+  /chain/executed-messages/{executedMessageId}:
+    $ref: './chain.yml#/endpoints/executed_message_resource'
+  /control/node:
+    $ref: './control.yml#/endpoints/node_resource'
+  /control/pieces:
+    $ref: './control.yml#/endpoints/pieces_collection'
+  /control/pieces/{pieceId}:
+    $ref: './control.yml#/endpoints/piece_resource'
+  /payment_channels/{paymentChannelId}/redeem:
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource_redeem'
+  /payment_channels/{paymentChannelId}/vouchers:
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource_vouchers'
+  /payment_channels:
+    $ref: 'payment_channels.yml#/endpoints/payment_channels_collection'
+  /payment_channels/{paymentChannelId}: # Right now it's not possible to look up Channels by ID alone, only by Payee/ID, channel ID could just be a concatenation
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource'
+  /payment_channels/{paymentChannelId}/close:
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource_close'
+  /payment_channels/{paymentChannelId}/cancel:
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource_cancel'
+  /payment_channels/{paymentChannelId}/reclaim:
+    $ref: 'payment_channels.yml#/endpoints/payment_channel_resource_reclaim'
+  /market/asks:
+    $ref: 'market.yml#/endpoints/asks_collection'
+  /market/asks/{askId}:
+    $ref: 'market.yml#/endpoints/ask_resource'
+  /market/storage_deals:
+    $ref: 'market.yml#/endpoints/storage_deals_collection'

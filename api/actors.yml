@@ -1,0 +1,153 @@
+models:
+  Actor:
+    type: object
+    properties:
+      kind:
+        type: string
+        readOnly: true
+        enum: [actor]
+      address:
+        type: string
+        description: The identifier that refers to an Actor in the Filecoin state. All Actors have an address. To learn more, take a look at the [address spec.](https://github.com/filecoin-project/specs/blob/master/address.md).
+      role:
+        type: string
+        enum: [Init,Account,StorageMiner,StorageMarket,PaymentChannel,MultisigAccount]
+      nonce:
+        type: number
+        description: Nonce is the nonce expected on the next message from this actor. Messages are processed in strict, contiguous nonce order. 
+      balance:
+        type: number
+        description: Balance is the amount of FIL in the actor's account.
+      head:
+        type: string
+        description: The CID ([Content Identifier](https://github.com/ipld/cid)) of the root of the Actor's state tree.
+      codeCid:
+        type: string
+        description: The CID ([Content Identifier](https://github.com/ipld/cid)) of the VM code for this actor's implementation (or a constant for actors implemented in Go code). Code may be nil for an uninitialized actor (which exists because it has received a balance)
+      info: 
+          oneOf: 
+            - $ref: '#/models/AccountActorState'
+            - $ref: '#/models/InitActorState'
+            - $ref: '#/models/PaymentChannelActorState'
+            - $ref: '#/models/StorageMinerActorState'
+            - $ref: '#/models/StorageMarketActorState'
+  AccountActorState:
+    $ref: '#/models/EmptyActorState'
+  EmptyActorState:
+    type: object 
+    description: There is no additional state exposed by this actor
+  InitActorState:
+    type: object
+    properties:
+      nextId: 
+        type: number
+        description: The next numerical ID to allocate to a newly instantiated Actor
+  PaymentChannelActorState:
+    $ref: '#/models/EmptyActorState'
+  StorageMarketActorState:
+    type: object
+    properties:
+      totalStorage:
+        type: number
+        description: Filecoin's total committed storage as of the current block.
+  StorageMinerActorState:
+    type: object
+    properties: 
+      owner:
+        type: string
+        description: The address of the account that owns this miner. Income and returned are paid to this address. This address is also allowed to change the worker address for the miner.
+      worker:
+        type: string
+        description: The address of the worker account for this miner. This will be the key that is used to sign blocks created by this miner, and sign messages sent on behalf of this miner to commit sectors, submit PoSts, and other day to day miner activities.
+      peerId: 
+        type: string
+        description: PeerID references the libp2p identity that the miner is operating.
+      sectorSize:
+        type: number
+        description: SectorSize is the amount of space in each sector committed to the network by this miner.
+      dePledgedCollateral:
+        type: number
+        description: Collateral that is waiting to be withdrawn
+      dePledgeTime: 
+        type: number
+        description: Time at which the depledged collateral may be withdrawn
+      sectors: 
+        type: array
+        items: 
+          $ref: 'actors.yml#/models/Sector'
+      provingSet:
+        type: array
+        items: 
+          $ref: 'actors.yml#/models/Sector'
+      currentFaultSet:
+        type: string
+      nextFaultSet:
+        type: string
+      nextDoneSet:
+        type: string
+      arbitratedDeals:
+        type: string
+      power:
+        type: number
+      slashedSet:
+        type: array
+        items: 
+          $ref: 'actors.yml#/models/Sector'
+      slashedAt:
+        type: number
+      ownedStorageCollateral:
+        type: number
+      provingPeriodEnd:
+        type: number
+  Sector:
+    type: object
+    properties:
+      id:
+        type: string
+      commR:
+        type: string
+endpoints:
+  actors_collection:
+    get:
+      operationId: listActors
+      summary: List Actors
+      description: List Actors currently known to this node in address order
+      tags:
+        - Actors
+      parameters:
+      - name: nextPageToken
+        in: query
+        description: Next page token
+        required: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/models/Actor'
+  actor_resource:
+    get:
+      operationId: getActorByAddress
+      summary: Find Actor by Address
+      description: Return information about the Actor with the specified Address
+      tags:
+        - Actors
+      parameters: 
+      - name: address
+        in: path
+        description: The address of the Actor to fetch
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/models/Actor'

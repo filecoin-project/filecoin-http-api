@@ -1,0 +1,135 @@
+models:
+  PieceMetadata:
+    type: object
+    properties:
+      id:
+        type: string
+        example: QmQXJPWYEnt9GoYu5SXkrKMWovCX78YBjFzRSJF63Zobnj
+        readOnly: true
+  PeerAddresses:
+    type: array
+    description: List of peer (network) addresses
+    items:
+      type: string
+      example: /ip4/127.0.0.1/tcp/6000/ipfs/QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
+  Node:
+    type: object
+    properties:
+      kind:
+        type: string
+        enum: [node]
+        readOnly: true
+      id:
+        type: string
+        example: QmeGwW4Nm543yYe5gchbETzzpcUJsPc7xtLkj7g5GCmMLq
+      addresses:
+        $ref: '#/models/PeerAddresses'
+      version:
+        type: string
+        example: "1.0.2"
+      commit:
+        type: string
+        example: "93540266a2a9972e91947a538ce70dc9c4e8077e"
+      protocol:
+        type: object
+        properties:
+          autoSealInterval:
+            type: number
+            description: Auto-Seal Interval in Seconds
+          sectorSizes:
+            type: array
+            description: Supoorted sector sizes in bytes
+            items:
+              type: number
+      bitswapStats:
+        type: object
+        properties:
+          blocksReceived:
+            type: number
+          blocksSent:
+            type: number
+          dataReceived:
+            type: number
+          dataSent:
+            type: number
+          dupBlksReceived:
+            type: number
+          dupDataReceived:
+            type: number
+          messagesReceived:
+            type: number
+          provideBufLen:
+            type: number
+          peers:
+            type: array
+            description: Filecoin Addresses of currently connected peers
+            items:
+              type: string
+              example: 'QmUA8TXLxsfuifpyHPxGfwWgXSCr6omqb6bdQy2KwWQCBz'
+          wantlist:
+            type: array
+            description: CIDs of currently desired content blocks
+            items:
+              type: string
+              example: 'QmQXJPWYEnt9GoYu5SXkrKMWovCX78YBjFzRSJF63Zobnj'
+      config:
+        type: object
+        description: Full JSON representation of the node's current configuration
+endpoints:
+  node_resource:
+    get:
+      operationId: getNode
+      summary: Return Node information
+      description: Get information about the current Filecoin Node.
+      tags:
+        - Node
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/models/Node'
+  pieces_collection:
+    post:
+      operationId: createPiece
+      summary: Add a Piece to local storage
+      description: This method imports data into the local node's temporary storage so that it can be transferred to a storage miner.
+      tags:
+        - Pieces
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/models/PieceMetadata'
+  piece_resource:
+    get:
+      operationId: getPieceById
+      summary: Fetch piece data
+      description: Fetch piece data from the local node's temporary storage.
+      tags:
+        - Pieces
+      parameters:
+        - name: pieceId
+          in: path
+          description: ID of the piece previously returned by corresponding createPiece POST method.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: If the request succeeds, the server returns the original data used to create the piece.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                description: The raw bytes of the originally imported data.
